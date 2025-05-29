@@ -3,7 +3,7 @@
 
 import type { ChartConfig } from "@/components/ui/chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2, PlusCircle } from "lucide-react";
+import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2, PlusCircle, Target } from "lucide-react"; // Added Target
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"; 
 import { 
   LineChart as RechartsActualLineChart,
@@ -64,7 +64,7 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setIsLoading(true);
       // Simulate API call - in a real app, this would fetch data
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Reduced timeout for faster loading of empty state
+      await new Promise(resolve => setTimeout(resolve, 1000)); 
 
       // Set to initial (empty) state after "fetch"
       setDashboardData(initialDashboardState); 
@@ -188,14 +188,19 @@ export default function DashboardPage() {
               <CardTitle>Financial Goals</CardTitle>
               <CardDescription>Track your progress towards financial goals.</CardDescription>
             </CardHeader>
-            <CardContent className="text-center py-10 text-muted-foreground">
-              <p className="mb-4">No goals being tracked on the dashboard currently.</p>
+            <CardContent className="flex flex-col items-center justify-center text-center py-10">
+              <Target className="h-12 w-12 text-primary mb-4" />
+              <p className="text-lg font-semibold text-foreground mb-2">Ready to Hit Your Targets?</p>
+              <p className="text-muted-foreground mb-4">Define your financial goals and watch your progress.</p>
               <Link href="/goals" passHref>
-                <Button variant="primary">
-                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Goal
+                <Button variant="primary" size="lg">
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  Set a New Goal
                 </Button>
               </Link>
-              <p className="text-xs mt-2">You can add goal trackers here or manage them on the Goals page.</p>
+              <p className="text-xs text-muted-foreground mt-3">
+                Manage all goals on the <Link href="/goals" className="underline hover:text-primary">Goals page</Link>.
+              </p>
             </CardContent>
           </Card>
         </div>
@@ -254,5 +259,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
