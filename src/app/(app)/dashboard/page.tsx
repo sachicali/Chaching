@@ -3,23 +3,23 @@
 
 import type { ChartConfig } from "@/components/ui/chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react"; 
+import { Loader2, Target, PlusCircle, ListChecks } from "lucide-react"; 
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"; 
 import { 
-  LineChart as RechartsActualLineChart,
   BarChart as RechartsActualBarChart,
   Bar,
   CartesianGrid, 
   XAxis, 
   YAxis, 
-  Tooltip, 
   ResponsiveContainer, 
-  Line as RechartsLine 
+  Line as RechartsLine,
+  LineChart as RechartsActualLineChart,
 } from 'recharts';
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { cn } from "@/lib/utils";
 
 const chartConfig = {
   income: { label: "Income", color: "hsl(var(--chart-2))" }, 
@@ -29,6 +29,20 @@ const chartConfig = {
 const expenseBreakdownChartConfig = {
   value: { label: "Amount", color: "hsl(var(--chart-1))" },
 } satisfies ChartConfig;
+
+interface Goal {
+  name: string;
+  target: number;
+  current: number;
+}
+
+interface Transaction {
+  id: string;
+  description: string;
+  amount: number;
+  type: "income" | "expense";
+  date: string;
+}
 
 interface DashboardState {
   totalIncome: number;
@@ -41,6 +55,8 @@ interface DashboardState {
   netProfitChange: string; 
   incomeExpenseChartData: { month: string; income: number; expenses: number }[];
   expenseBreakdownData: { name: string; value: number }[];
+  recentTransactions: Transaction[];
+  goalsData: Goal[];
 }
 
 const initialDashboardState: DashboardState = {
@@ -54,6 +70,8 @@ const initialDashboardState: DashboardState = {
   netProfitChange: "+0%",
   incomeExpenseChartData: [],
   expenseBreakdownData: [],
+  recentTransactions: [],
+  goalsData: [],
 };
 
 export default function DashboardPage() {
@@ -63,8 +81,31 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000)); 
-      setDashboardData(initialDashboardState); 
+      // In a real app, replace this with actual data fetching:
+      setDashboardData({
+        totalIncome: 0, // Example: fetchedData.summary.totalIncome,
+        totalIncomeChange: "+0%", // Example: calculatePercentageChange(fetchedData.summary.totalIncome, fetchedData.previousPeriod.totalIncome),
+        totalExpenses: 0,
+        totalExpensesChange: "+0%",
+        netSavings: 0,
+        netSavingsChange: "+0%",
+        netProfit: 0,
+        netProfitChange: "+0%",
+        incomeExpenseChartData: [
+          // Example: { month: "Jan", income: 0, expenses: 0 }, ...
+        ],
+        expenseBreakdownData: [
+          // Example: { name: "Groceries", value: 0 }, ...
+        ],
+        recentTransactions: [
+          // Example: { id: "1", description: "Client Payment", amount: 2000, type: "income", date: "2023-10-26" }...
+        ],
+        goalsData: [
+          // Example: { name: "New Laptop", target: 80000, current: 15000 } ...
+        ]
+      }); 
       setIsLoading(false);
     };
 
@@ -76,7 +117,7 @@ export default function DashboardPage() {
   };
   
   const getChangeColor = (change: string) => {
-    if (change.startsWith('+')) return 'text-positive';
+    if (change.startsWith('+')) return 'text-positive'; // Ensure 'text-positive' is defined in globals.css
     if (change.startsWith('-')) return 'text-destructive';
     return 'text-muted-foreground';
   };
@@ -187,7 +228,7 @@ export default function DashboardPage() {
                       contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "var(--radius)" }}
                     />
                     <RechartsLine type="monotone" dataKey="income" stroke="var(--color-income)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--color-income)", strokeWidth:0 }} />
-                     <RechartsLine type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--color-expenses)", strokeWidth:0 }} />
+                    <RechartsLine type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--color-expenses)", strokeWidth:0 }} />
                   </RechartsActualLineChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -262,6 +303,88 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* New Row for Financial Goals and Recent Transactions */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">Financial Goals</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            ) : dashboardData.goalsData.length > 0 ? (
+              <div className="space-y-4">
+                {/* In a real app, map over dashboardData.goalsData here */}
+                {/* For now, this will be empty, so the else block will render. */}
+                {/* Example: <GoalTracker goalName="New Laptop" targetAmount={80000} currentAmount={15000} /> */}
+              </div>
+            ) : (
+              <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground p-6">
+                <Target className="h-12 w-12 mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">Aim for Your Ambitions</h3>
+                <p className="mb-4 text-sm">Set financial goals to track your progress towards your dreams.</p>
+                <Link href="/goals" passHref>
+                  <Button variant="outline">
+                    <PlusCircle className="mr-2 h-4 w-4" /> Set a New Goal
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            {isLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <Loader2 className="h-12 w-12 animate-spin text-primary" />
+              </div>
+            ) : dashboardData.recentTransactions.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dashboardData.recentTransactions.map((transaction) => (
+                    <TableRow key={transaction.id}>
+                      <TableCell className="font-medium">{transaction.description}</TableCell>
+                      <TableCell className="text-muted-foreground">{transaction.date}</TableCell>
+                      <TableCell 
+                        className={cn(
+                          "text-right font-semibold",
+                          transaction.type === 'income' ? 'text-positive' : 'text-destructive'
+                        )}
+                      >
+                        {transaction.type === 'expense' ? '-' : ''}{formatCurrency(transaction.amount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground p-6">
+                 <ListChecks className="h-12 w-12 mb-4 text-primary" />
+                <p>No recent transactions to display.</p>
+                <p className="text-sm">Start by adding income or expenses.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
     </div>
   );
 }
+
+
+    
