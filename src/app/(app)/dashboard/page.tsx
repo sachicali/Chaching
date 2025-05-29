@@ -130,6 +130,7 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        {/* Left Column: Income vs. Expenses Chart */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center">
@@ -182,7 +183,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         
-        <div className="space-y-6">
+        {/* Right Column: Stacked Financial Goals and Recent Transactions */}
+        <div className="space-y-6 flex flex-col">
            <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Financial Goals</CardTitle>
@@ -203,59 +205,58 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
+
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Activity className="mr-2 h-5 w-5 text-primary" />
+                Recent Transactions
+              </CardTitle>
+              <CardDescription>Your latest income and expense activities.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                 <div className="flex justify-center items-center py-10">
+                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                  </div>
+              ) : dashboardData.recentTransactions.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dashboardData.recentTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
+                        <TableCell>{transaction.description}</TableCell>
+                        <TableCell>
+                          <Badge variant={transaction.type === 'income' ? 'default' : 'secondary'} 
+                                 className={transaction.type === 'income' ? 'bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30' : 'bg-red-500/20 text-red-700 border-red-500/30 hover:bg-red-500/30'}>
+                            {transaction.type}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          {transaction.type === 'income' ? '+' : '-'}₱{transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-10 text-muted-foreground">
+                  <p>No recent transactions found.</p>
+                  <p className="text-xs">Connect your accounts or add transactions manually.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-       <Card className="shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Activity className="mr-2 h-5 w-5 text-primary" />
-            Recent Transactions
-          </CardTitle>
-          <CardDescription>Your latest income and expense activities.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-             <div className="flex justify-center items-center py-10">
-                <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              </div>
-          ) : dashboardData.recentTransactions.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {dashboardData.recentTransactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>{new Date(transaction.date).toLocaleDateString()}</TableCell>
-                    <TableCell>{transaction.description}</TableCell>
-                    <TableCell>
-                      <Badge variant={transaction.type === 'income' ? 'default' : 'secondary'} 
-                             className={transaction.type === 'income' ? 'bg-green-500/20 text-green-700 border-green-500/30 hover:bg-green-500/30' : 'bg-red-500/20 text-red-700 border-red-500/30 hover:bg-red-500/30'}>
-                        {transaction.type}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className={`text-right font-medium ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                      {transaction.type === 'income' ? '+' : '-'}₱{transaction.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-10 text-muted-foreground">
-              <p>No recent transactions found.</p>
-              <p className="text-xs">Connect your accounts or add transactions manually.</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
     </div>
   );
 }
