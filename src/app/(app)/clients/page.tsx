@@ -1,7 +1,9 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import type { ReactNode } from 'react';
+import { useState, useMemo, useEffect }
+from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -195,9 +197,9 @@ export default function ClientsPage() {
     }
   };
   
-  const ClientDetailRow = ({ label, value, icon }: { label: string, value?: string | number, icon?: React.ElementType }) => {
+  const ClientDetailRow = ({ label, value, icon }: { label: string, value?: string | number | ReactNode, icon?: React.ElementType }) => {
     const IconComponent = icon;
-    if (!value && value !==0) return null; 
+    if (!value && value !==0 && value !== "") return null; // Allow empty string for notes or similar
     return (
       <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
         <div className="text-sm text-muted-foreground font-medium flex items-center">
@@ -241,7 +243,7 @@ export default function ClientsPage() {
 
   return (
     // Page Root
-    <div className="flex h-full">
+    <div className="flex h-full min-h-0"> {/* Added min-h-0 */}
       {/* Left Pane: Client List */}
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full">
         <div className="p-4 space-y-4"> {/* Header section */}
