@@ -407,7 +407,11 @@ export default function ClientsPage() {
                                 <TableHead>Company</TableHead>
                                 <TableHead>Email</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead className="text-right">Monthly (USD)</TableHead>
+                                <TableHead>Monthly (USD)</TableHead>
+                                <TableHead>Monthly (PHP)</TableHead>
+                                <TableHead>Total (USD)</TableHead>
+                                <TableHead>Total (PHP)</TableHead>
+                                <TableHead>Payment Via</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -427,9 +431,19 @@ export default function ClientsPage() {
                                     <TableCell>
                                         {client.status && <Badge variant={getStatusBadgeVariant(client.status)}>{client.status}</Badge>}
                                     </TableCell>
-                                    <TableCell className="text-right text-muted-foreground">
+                                    <TableCell className="text-muted-foreground">
                                         {client.monthlyEarnings ? formatUSD(client.monthlyEarnings) : "-"}
                                     </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {client.monthlyEarnings ? formatPHP(client.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "-"}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">
+                                        {client.totalEarningsUSD ? formatUSD(client.totalEarningsUSD) : "-"}
+                                    </TableCell>
+                                     <TableCell className="text-muted-foreground">
+                                        {client.totalEarningsUSD ? formatPHP(client.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "-"}
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">{client.paymentMedium || "N/A"}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -494,5 +508,7 @@ export default function ClientsPage() {
     </div>
   );
 }
+
+    
 
     
