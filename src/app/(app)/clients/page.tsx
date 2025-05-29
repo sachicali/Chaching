@@ -234,7 +234,7 @@ export default function ClientsPage() {
 
   return (
     // Page Root
-    <div className="flex h-full flex-1">
+    <div className="flex h-full">
       {/* Left Pane: Client List */}
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50">
         <div className="p-4 space-y-4"> {/* Header section */}
@@ -310,9 +310,9 @@ export default function ClientsPage() {
       </div>
 
       {/* Right Pane: Client Details or Overview Table */}
-      <div className="flex-1 p-6 lg:p-8 overflow-y-auto">
+      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto">
         {selectedClient ? (
-          <div className="space-y-6">
+          <div className="space-y-6 flex-1 flex flex-col">
             <div className="flex justify-between items-start">
                 <div>
                     <h2 className="text-3xl font-bold text-foreground">{selectedClient.name}</h2>
@@ -327,14 +327,14 @@ export default function ClientsPage() {
                 )}
             </div>
             <Separator />
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="financials">Financials</TabsTrigger>
                 <TabsTrigger value="invoices">Invoices</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
-              <TabsContent value="overview" className="mt-6 space-y-6">
+              <TabsContent value="overview" className="mt-6 space-y-6 flex-1">
                 <div className="rounded-lg border border-border p-6">
                   <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><Contact className="mr-2 h-5 w-5"/>Contact & Details</h3>
                   <ClientDetailRow label="Email" value={selectedClient.email} icon={Mail} />
@@ -351,7 +351,7 @@ export default function ClientsPage() {
                   )}
                 </div>
               </TabsContent>
-              <TabsContent value="financials" className="mt-6 space-y-6">
+              <TabsContent value="financials" className="mt-6 space-y-6 flex-1">
                 <div className="rounded-lg border border-border p-6">
                     <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><DollarSign className="mr-2 h-5 w-5"/>Financial Summary</h3>
                     <ClientDetailRow label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
@@ -361,7 +361,7 @@ export default function ClientsPage() {
                     <ClientDetailRow label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
                 </div>
               </TabsContent>
-              <TabsContent value="invoices" className="mt-6">
+              <TabsContent value="invoices" className="mt-6 flex-1">
                  <div className="rounded-lg border border-border p-6">
                     <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><FileTextIcon className="mr-2 h-5 w-5"/>Invoices</h3>
                     <Table>
@@ -383,7 +383,7 @@ export default function ClientsPage() {
                     </Table>
                 </div>
               </TabsContent>
-              <TabsContent value="activity" className="mt-6">
+              <TabsContent value="activity" className="mt-6 flex-1">
                  <div className="rounded-lg border border-border p-6 text-center text-muted-foreground h-48 flex items-center justify-center">
                     Client activity log will be displayed here. (Coming soon)
                 </div>
@@ -391,7 +391,7 @@ export default function ClientsPage() {
             </Tabs>
           </div>
         ) : filteredClients.length > 0 ? (
-            <Card>
+            <Card className="flex-1 flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center text-2xl">
                         <Users2 className="mr-3 h-6 w-6 text-primary" /> 
@@ -399,7 +399,7 @@ export default function ClientsPage() {
                     </CardTitle>
                     <CardDescription>Select a client from the list on the left to view their details, or browse all clients below.</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -451,7 +451,7 @@ export default function ClientsPage() {
                 </CardContent>
             </Card>
         ) : (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground flex-1">
             <PackageSearch className="h-16 w-16 mb-4 text-primary/30" />
             <p className="text-xl">No clients found.</p>
             <p className="text-sm">Click "New client" in the sidebar to add your first one.</p>
@@ -508,7 +508,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-    
-
-    
