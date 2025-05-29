@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  SidebarTrigger,
+  // SidebarTrigger, // Not used directly here anymore if mobile trigger is in AppLayout
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ import {
   AlertTriangle,
   Brain,
   LogOut,
-  DollarSign,
+  DollarSign, // Keep DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -64,11 +64,17 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible={isMobile ? "offcanvas" : "icon"}>
       <SidebarHeader className="p-4 flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/10 rounded-full">
-          <DollarSign className="w-7 h-7" />
+        {/* Use a simple SVG or a themed icon if DollarSign with text-primary looks off */}
+        <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent rounded-full">
+          {/* Simple Triangle/Logo Placeholder, matching foreground color */}
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
+          </svg>
         </Button>
         <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-          <h1 className="text-xl font-semibold text-primary">Chaching</h1>
+          <h1 className="text-xl font-semibold text-sidebar-foreground">Chaching</h1>
           <p className="text-xs text-muted-foreground">Freelancer Finance</p>
         </div>
       </SidebarHeader>
@@ -138,7 +144,7 @@ export function AppSidebar() {
               <AvatarFallback>U</AvatarFallback>
             </Avatar>
             <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <p className="text-sm font-medium">User Name</p>
+              <p className="text-sm font-medium text-sidebar-foreground">User Name</p>
               <p className="text-xs text-muted-foreground">user@example.com</p>
             </div>
           </div>
