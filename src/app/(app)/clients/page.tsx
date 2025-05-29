@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  DialogTrigger,
+  // DialogTrigger, // No longer directly used for the problematic buttons
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +21,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Briefcase, Mail, Phone, MapPin, FileTextIcon } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +39,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useClients, type Client } from "@/contexts/ClientContext";
 import { cn } from "@/lib/utils";
 
+const EXCHANGE_RATE_USD_TO_PHP = 58.75;
+
+const formatUSD = (value?: number) => {
+  if (value === undefined || value === null || isNaN(value)) return "$0.00";
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+};
+
+const formatPHP = (value?: number) => {
+  if (value === undefined || value === null || isNaN(value)) return "₱0.00";
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
+};
 
 const clientStatusOptions = ["Active", "On Roster", "Prospect", "Former Client", "On Hold", "Inactive", "Payment Pending"];
 
@@ -89,7 +100,6 @@ export default function ClientsPage() {
     return clients.find(client => client.id === selectedClientId);
   }, [clients, selectedClientId]);
 
-  // Auto-select the first client if none is selected and clients list is not empty
   useEffect(() => {
     if (!selectedClientId && filteredClients.length > 0) {
       setSelectedClientId(filteredClients[0].id);
@@ -97,7 +107,6 @@ export default function ClientsPage() {
       setSelectedClientId(null);
     }
   }, [filteredClients, selectedClientId]);
-
 
   const resetAddClientForm = () => {
     setNewClientName(""); setNewClientEmail(""); setNewClientPhone(""); setNewClientCompany("");
@@ -179,9 +188,9 @@ export default function ClientsPage() {
     }
   };
   
-  const ClientDetailRow = ({ label, value, icon }: { label: string, value?: string, icon?: React.ElementType }) => {
+  const ClientDetailRow = ({ label, value, icon }: { label: string, value?: string | number, icon?: React.ElementType }) => {
     const IconComponent = icon;
-    if (!value) return null;
+    if (!value && value !==0) return null; // Allow 0 to be displayed
     return (
       <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
         <div className="text-sm text-muted-foreground font-medium flex items-center">
@@ -193,6 +202,16 @@ export default function ClientsPage() {
     );
   };
 
+  const getStatusBadgeVariant = (status?: string) => {
+    if (!status) return "secondary";
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus.includes("active") || lowerStatus.includes("on roster")) return "default"; // bg-primary
+    if (lowerStatus.includes("prospect")) return "outline"; 
+    if (lowerStatus.includes("former") || lowerStatus.includes("inactive")) return "destructive";
+    if (lowerStatus.includes("on hold") || lowerStatus.includes("payment pending")) return "secondary"; // Using secondary for neutral/pending
+    return "secondary";
+  };
+
 
   return (
     <div className="flex h-full flex-1">
@@ -201,9 +220,7 @@ export default function ClientsPage() {
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-            <DialogTrigger asChild>
-                <Button variant="default" size="sm" onClick={() => setIsAddClientDialogOpen(true)}>New client</Button>
-            </DialogTrigger>
+            <Button variant="default" size="sm" onClick={() => setIsAddClientDialogOpen(true)}>New client</Button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -236,6 +253,11 @@ export default function ClientsPage() {
                     <div className="font-semibold text-foreground">{client.name}</div>
                     <div className="text-xs text-muted-foreground">{client.company || "Individual"}</div>
                   </div>
+                  {client.status && (
+                     <Badge variant={getStatusBadgeVariant(client.status)} className="ml-auto mr-2 group-hover:hidden">
+                       {client.status}
+                     </Badge>
+                  )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto">
@@ -255,8 +277,9 @@ export default function ClientsPage() {
               ))
             ) : (
               <div className="text-center py-10 text-muted-foreground">
-                <Users className="mx-auto h-12 w-12 mb-4 text-primary/50" />
+                <Contact className="mx-auto h-12 w-12 mb-4 text-primary/50" />
                 <p>No clients found.</p>
+                 <p className="text-sm">Click "New client" to add your first one.</p>
               </div>
             )}
           </div>
@@ -267,23 +290,34 @@ export default function ClientsPage() {
       <div className="flex-1 p-6 lg:p-8 overflow-y-auto">
         {selectedClient ? (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-3xl font-bold text-foreground">{selectedClient.name}</h2>
-              <p className="text-md text-muted-foreground">{selectedClient.company || "Individual"}</p>
+            <div className="flex justify-between items-start">
+                <div>
+                    <h2 className="text-3xl font-bold text-foreground">{selectedClient.name}</h2>
+                    <p className="text-md text-muted-foreground flex items-center">
+                        <Briefcase className="mr-2 h-4 w-4" /> {selectedClient.company || "Individual"}
+                    </p>
+                </div>
+                {selectedClient.status && (
+                    <Badge variant={getStatusBadgeVariant(selectedClient.status)} className="text-sm px-3 py-1">
+                        {selectedClient.status}
+                    </Badge>
+                )}
             </div>
             <Separator />
             <Tabs defaultValue="overview" className="w-full">
               <TabsList>
                 <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="financials">Financials</TabsTrigger>
                 <TabsTrigger value="invoices">Invoices</TabsTrigger>
                 <TabsTrigger value="activity">Activity</TabsTrigger>
               </TabsList>
               <TabsContent value="overview" className="mt-6 space-y-6">
                 <div className="rounded-lg border border-border p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-foreground">Client details</h3>
+                  <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><Contact className="mr-2 h-5 w-5"/>Contact & Details</h3>
                   <ClientDetailRow label="Email" value={selectedClient.email} icon={Mail} />
                   <ClientDetailRow label="Phone" value={selectedClient.phone} icon={Phone} />
                   <ClientDetailRow label="Address" value={selectedClient.address} icon={MapPin} />
+                  <ClientDetailRow label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
                   {selectedClient.notes && (
                     <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
                        <div className="text-sm text-muted-foreground font-medium flex items-start pt-0.5">
@@ -293,50 +327,53 @@ export default function ClientsPage() {
                     </div>
                   )}
                 </div>
+              </TabsContent>
+              <TabsContent value="financials" className="mt-6 space-y-6">
                 <div className="rounded-lg border border-border p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-foreground">Invoices</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Invoice #</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Amount</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {/* Placeholder for invoices - map actual invoice data here */}
-                       <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
-                          No invoices to display for this client yet.
-                        </TableCell>
-                      </TableRow>
-                    </TableBody>
-                  </Table>
+                    <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><DollarSign className="mr-2 h-5 w-5"/>Financial Summary</h3>
+                    <ClientDetailRow label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
+                    <ClientDetailRow label="Monthly Earnings (PHP)" value={selectedClient.monthlyEarnings ? formatPHP(selectedClient.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
+                    <ClientDetailRow label="Total Earnings (USD)" value={selectedClient.totalEarningsUSD ? formatUSD(selectedClient.totalEarningsUSD) : "Not set"} icon={DollarSign} />
+                    <ClientDetailRow label="Total Earnings (PHP)" value={selectedClient.totalEarningsUSD ? formatPHP(selectedClient.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
                 </div>
               </TabsContent>
               <TabsContent value="invoices" className="mt-6">
-                <div className="rounded-lg border border-border p-6 text-center text-muted-foreground h-48 flex items-center justify-center">
-                  Invoice history will be displayed here.
+                 <div className="rounded-lg border border-border p-6">
+                    <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><FileTextIcon className="mr-2 h-5 w-5"/>Invoices</h3>
+                    <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead>Invoice #</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead className="text-right">Amount</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        <TableRow>
+                            <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
+                            No invoices to display for this client yet.
+                            </TableCell>
+                        </TableRow>
+                        </TableBody>
+                    </Table>
                 </div>
               </TabsContent>
               <TabsContent value="activity" className="mt-6">
                  <div className="rounded-lg border border-border p-6 text-center text-muted-foreground h-48 flex items-center justify-center">
-                  Client activity log will be displayed here.
+                    Client activity log will be displayed here. (Coming soon)
                 </div>
               </TabsContent>
             </Tabs>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Users className="h-16 w-16 mb-4 text-primary/30" />
+            <Contact className="h-16 w-16 mb-4 text-primary/30" />
             <p className="text-xl">Select a client to view their details</p>
             <p className="text-sm">or create a new client to get started.</p>
-             <DialogTrigger asChild>
-                <Button variant="outline" className="mt-4" onClick={() => setIsAddClientDialogOpen(true)}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
-                </Button>
-            </DialogTrigger>
+            <Button variant="outline" className="mt-4" onClick={() => setIsAddClientDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
+            </Button>
           </div>
         )}
       </div>
@@ -351,12 +388,12 @@ export default function ClientsPage() {
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-email" className="text-right">Email*</Label><Input id="add-email" type="email" value={newClientEmail} onChange={(e) => setNewClientEmail(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-phone" className="text-right">Phone</Label><Input id="add-phone" type="tel" value={newClientPhone} onChange={(e) => setNewClientPhone(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-company" className="text-right">Company</Label><Input id="add-company" value={newClientCompany} onChange={(e) => setNewClientCompany(e.target.value)} className="col-span-3"/></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-monthly-earnings" className="text-right">Monthly (USD)</Label><Input id="add-monthly-earnings" type="number" value={newClientMonthlyEarnings} onChange={(e) => setNewClientMonthlyEarnings(e.target.value)} className="col-span-3" min="0"/></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-total-earnings" className="text-right">Total (USD)</Label><Input id="add-total-earnings" type="number" value={newClientTotalEarningsUSD} onChange={(e) => setNewClientTotalEarningsUSD(e.target.value)} className="col-span-3" min="0"/></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-payment-medium" className="text-right">Payment Via</Label><Input id="add-payment-medium" value={newClientPaymentMedium} onChange={(e) => setNewClientPaymentMedium(e.target.value)} className="col-span-3"/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-monthly-earnings" className="text-right">Monthly (USD)</Label><Input id="add-monthly-earnings" type="number" placeholder="e.g., 1500" value={newClientMonthlyEarnings} onChange={(e) => setNewClientMonthlyEarnings(e.target.value)} className="col-span-3" min="0"/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-total-earnings" className="text-right">Total (USD)</Label><Input id="add-total-earnings" type="number" placeholder="e.g., 10000" value={newClientTotalEarningsUSD} onChange={(e) => setNewClientTotalEarningsUSD(e.target.value)} className="col-span-3" min="0"/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-payment-medium" className="text-right">Payment Via</Label><Input id="add-payment-medium" placeholder="e.g., Bank Transfer, PayPal" value={newClientPaymentMedium} onChange={(e) => setNewClientPaymentMedium(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-status" className="text-right">Status</Label><Select value={newClientStatus} onValueChange={setNewClientStatus}><SelectTrigger className="col-span-3" id="add-status"><SelectValue placeholder="Select status" /></SelectTrigger><SelectContent>{clientStatusOptions.map(o => (<SelectItem key={o} value={o}>{o}</SelectItem>))}</SelectContent></Select></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-address" className="text-right">Address</Label><Input id="add-address" value={newClientAddress} onChange={(e) => setNewClientAddress(e.target.value)} className="col-span-3"/></div>
-              <div className="grid grid-cols-4 items-start gap-4"><Label htmlFor="add-notes" className="text-right pt-2">Notes</Label><Textarea id="add-notes" value={newClientNotes} onChange={(e) => setNewClientNotes(e.target.value)} className="col-span-3" rows={3}/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-address" className="text-right">Address</Label><Input id="add-address" placeholder="Client's address" value={newClientAddress} onChange={(e) => setNewClientAddress(e.target.value)} className="col-span-3"/></div>
+              <div className="grid grid-cols-4 items-start gap-4"><Label htmlFor="add-notes" className="text-right pt-2">Notes</Label><Textarea id="add-notes" placeholder="Any relevant notes about the client..." value={newClientNotes} onChange={(e) => setNewClientNotes(e.target.value)} className="col-span-3" rows={3}/></div>
             </div>
           </ScrollArea>
           <DialogFooter><Button type="button" variant="outline" onClick={() => setIsAddClientDialogOpen(false)}>Cancel</Button><Button type="button" onClick={handleAddClient}>Save Client</Button></DialogFooter>
@@ -387,3 +424,4 @@ export default function ClientsPage() {
     </div>
   );
 }
+
