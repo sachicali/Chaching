@@ -129,9 +129,9 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3">
         {/* Left Column: Income vs. Expenses Chart */}
-        <Card className="shadow-lg">
+        <Card className="shadow-lg lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center">
               <LineChartIcon className="mr-2 h-5 w-5 text-primary" /> 
@@ -184,7 +184,7 @@ export default function DashboardPage() {
         </Card>
         
         {/* Right Column: Stacked Financial Goals and Recent Transactions */}
-        <div className="space-y-6 flex flex-col">
+        <div className="space-y-6 flex flex-col lg:col-span-1">
            <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Financial Goals</CardTitle>
