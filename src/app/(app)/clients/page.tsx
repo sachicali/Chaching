@@ -72,6 +72,8 @@ export default function ClientsPage() {
   const [newClientStatus, setNewClientStatus] = useState(clientStatusOptions[0]);
   const [newClientAddress, setNewClientAddress] = useState("");
   const [newClientNotes, setNewClientNotes] = useState("");
+  const [newClientAvatarUrl, setNewClientAvatarUrl] = useState("");
+
 
   // Edit form state
   const [editClientName, setEditClientName] = useState("");
@@ -84,6 +86,8 @@ export default function ClientsPage() {
   const [editClientStatus, setEditClientStatus] = useState("");
   const [editClientAddress, setEditClientAddress] = useState("");
   const [editClientNotes, setEditClientNotes] = useState("");
+  const [editClientAvatarUrl, setEditClientAvatarUrl] = useState("");
+
 
   const { toast } = useToast();
 
@@ -112,6 +116,7 @@ export default function ClientsPage() {
     setNewClientName(""); setNewClientEmail(""); setNewClientPhone(""); setNewClientCompany("");
     setNewClientMonthlyEarnings(""); setNewClientTotalEarningsUSD(""); setNewClientPaymentMedium("");
     setNewClientStatus(clientStatusOptions[0]); setNewClientAddress(""); setNewClientNotes("");
+    setNewClientAvatarUrl("");
   };
 
   const validateClientForm = (name: string, email: string, monthlyEarningsStr: string, totalEarningsStr: string) => {
@@ -146,6 +151,7 @@ export default function ClientsPage() {
       totalEarningsUSD: newClientTotalEarningsUSD ? parseFloat(newClientTotalEarningsUSD) : undefined,
       paymentMedium: newClientPaymentMedium.trim() || undefined, status: newClientStatus || undefined,
       address: newClientAddress.trim() || undefined, notes: newClientNotes.trim() || undefined,
+      avatarUrl: newClientAvatarUrl.trim() || undefined,
     });
     
     resetAddClientForm();
@@ -160,6 +166,7 @@ export default function ClientsPage() {
     setEditClientTotalEarningsUSD(client.totalEarningsUSD?.toString() || "");
     setEditClientPaymentMedium(client.paymentMedium || ""); setEditClientStatus(client.status || clientStatusOptions[0]);
     setEditClientAddress(client.address || ""); setEditClientNotes(client.notes || "");
+    setEditClientAvatarUrl(client.avatarUrl || "");
     setIsEditClientDialogOpen(true);
   };
 
@@ -174,7 +181,7 @@ export default function ClientsPage() {
       totalEarningsUSD: editClientTotalEarningsUSD ? parseFloat(editClientTotalEarningsUSD) : undefined,
       paymentMedium: editClientPaymentMedium.trim() || undefined, status: editClientStatus || undefined,
       address: editClientAddress.trim() || undefined, notes: editClientNotes.trim() || undefined,
-      avatarUrl: editingClient.avatarUrl 
+      avatarUrl: editClientAvatarUrl.trim() || editingClient.avatarUrl,
     });
 
     setIsEditClientDialogOpen(false);
@@ -254,7 +261,7 @@ export default function ClientsPage() {
           </div>
         </div>
         <ScrollArea className="flex-1 min-h-0"> {/* Client List Area */}
-          <div className="p-4 space-y-2"> {/* Inner content wrapper */}
+          <div className="p-4 space-y-2 h-full flex flex-col"> {/* Inner content wrapper */}
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <div
@@ -299,7 +306,7 @@ export default function ClientsPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-10 text-muted-foreground">
+              <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground"> {/* Ensure placeholder fills space */}
                 <PackageSearch className="mx-auto h-12 w-12 mb-4 text-primary/50" />
                 <p>No clients found {searchTerm && "matching your search"}.</p>
                 {!searchTerm && <p className="text-sm">Click "New client" to add your first one.</p>}
@@ -478,6 +485,7 @@ export default function ClientsPage() {
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-status" className="text-right">Status</Label><Select value={newClientStatus} onValueChange={setNewClientStatus}><SelectTrigger className="col-span-3" id="add-status"><SelectValue placeholder="Select status" /></SelectTrigger><SelectContent>{clientStatusOptions.map(o => (<SelectItem key={o} value={o}>{o}</SelectItem>))}</SelectContent></Select></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-address" className="text-right">Address</Label><Input id="add-address" placeholder="Client's address" value={newClientAddress} onChange={(e) => setNewClientAddress(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-start gap-4"><Label htmlFor="add-notes" className="text-right pt-2">Notes</Label><Textarea id="add-notes" placeholder="Any relevant notes about the client..." value={newClientNotes} onChange={(e) => setNewClientNotes(e.target.value)} className="col-span-3" rows={3}/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-avatar" className="text-right">Avatar URL</Label><Input id="add-avatar" placeholder="https://example.com/avatar.png" value={newClientAvatarUrl} onChange={(e) => setNewClientAvatarUrl(e.target.value)} className="col-span-3"/></div>
             </div>
           </ScrollArea>
           <DialogFooter><Button type="button" variant="outline" onClick={() => setIsAddClientDialogOpen(false)}>Cancel</Button><Button type="button" onClick={handleAddClient}>Save Client</Button></DialogFooter>
@@ -500,6 +508,7 @@ export default function ClientsPage() {
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-status" className="text-right">Status</Label><Select value={editClientStatus} onValueChange={setEditClientStatus}><SelectTrigger className="col-span-3" id="edit-status"><SelectValue placeholder="Select status" /></SelectTrigger><SelectContent>{clientStatusOptions.map(o => (<SelectItem key={o} value={o}>{o}</SelectItem>))}</SelectContent></Select></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-address" className="text-right">Address</Label><Input id="edit-address" value={editClientAddress} onChange={(e) => setEditClientAddress(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-start gap-4"><Label htmlFor="edit-notes" className="text-right pt-2">Notes</Label><Textarea id="edit-notes" value={editClientNotes} onChange={(e) => setEditClientNotes(e.target.value)} className="col-span-3" rows={3}/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-avatar" className="text-right">Avatar URL</Label><Input id="edit-avatar" placeholder="https://example.com/avatar.png" value={editClientAvatarUrl} onChange={(e) => setEditClientAvatarUrl(e.target.value)} className="col-span-3"/></div>
             </div>
           </ScrollArea>
           <DialogFooter><Button type="button" variant="outline" onClick={() => setIsEditClientDialogOpen(false)}>Cancel</Button><Button type="button" onClick={handleSaveClientChanges}>Save Changes</Button></DialogFooter>
