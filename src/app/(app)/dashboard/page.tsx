@@ -3,7 +3,7 @@
 
 import type { ChartConfig } from "@/components/ui/chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2, PlusCircle, Target } from "lucide-react"; // Added Target
+import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2, PlusCircle, Target } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"; 
 import { 
   LineChart as RechartsActualLineChart,
@@ -140,11 +140,11 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex justify-center items-center h-[300px]">
+              <div className="flex justify-center items-center min-h-[300px] h-[40vh]">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
             ) : dashboardData.incomeExpenseChartData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-[300px] w-full">
+              <ChartContainer config={chartConfig} className="min-h-[300px] h-[40vh] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartsActualLineChart data={dashboardData.incomeExpenseChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -163,7 +163,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="flex flex-col justify-center items-center h-[300px] text-center text-muted-foreground">
+              <div className="flex flex-col justify-center items-center min-h-[300px] h-[40vh] text-center text-muted-foreground">
                 <p className="mb-4">No income or expense data to display.</p>
                 <div className="flex gap-2">
                   <Link href="/income" passHref>
