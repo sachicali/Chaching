@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Users, MoreHorizontal } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,12 +49,21 @@ interface Client {
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
+  const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
 
   // Form state for adding a new client
   const [newClientName, setNewClientName] = useState("");
   const [newClientEmail, setNewClientEmail] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
   const [newClientCompany, setNewClientCompany] = useState("");
+
+  // Form state for editing an existing client
+  const [editClientName, setEditClientName] = useState("");
+  const [editClientEmail, setEditClientEmail] = useState("");
+  const [editClientPhone, setEditClientPhone] = useState("");
+  const [editClientCompany, setEditClientCompany] = useState("");
+
 
   const { toast } = useToast();
 
@@ -74,7 +83,6 @@ export default function ClientsPage() {
       });
       return;
     }
-    // Basic email validation
     if (!/\S+@\S+\.\S+/.test(newClientEmail)) {
         toast({
             title: "Invalid Email",
@@ -84,9 +92,8 @@ export default function ClientsPage() {
         return;
     }
 
-
     const newClient: Client = {
-      id: Date.now().toString(), // Simple ID generation
+      id: Date.now().toString(), 
       name: newClientName.trim(),
       email: newClientEmail.trim(),
       phone: newClientPhone.trim() || undefined,
@@ -101,6 +108,57 @@ export default function ClientsPage() {
     resetAddClientForm();
     setIsAddClientDialogOpen(false);
   };
+
+  const handleOpenEditDialog = (client: Client) => {
+    setEditingClient(client);
+    setEditClientName(client.name);
+    setEditClientEmail(client.email);
+    setEditClientPhone(client.phone || "");
+    setEditClientCompany(client.company || "");
+    setIsEditClientDialogOpen(true);
+  };
+
+  const handleSaveClientChanges = () => {
+    if (!editingClient) return;
+
+    if (!editClientName.trim() || !editClientEmail.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Client Name and Email are required.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!/\S+@\S+\.\S+/.test(editClientEmail)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setClients(clients.map(client =>
+      client.id === editingClient.id
+        ? {
+            ...client,
+            name: editClientName.trim(),
+            email: editClientEmail.trim(),
+            phone: editClientPhone.trim() || undefined,
+            company: editClientCompany.trim() || undefined,
+          }
+        : client
+    ));
+
+    toast({
+      title: "Client Updated",
+      description: `${editClientName.trim()} has been updated.`,
+    });
+
+    setIsEditClientDialogOpen(false);
+    setEditingClient(null); 
+  };
+
 
   const handleDeleteClient = (clientId: string) => {
     const clientToDelete = clients.find(client => client.id === clientId);
@@ -136,36 +194,36 @@ export default function ClientsPage() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
+                <Label htmlFor="add-name" className="text-right">
                   Name*
                 </Label>
                 <Input
-                  id="name"
+                  id="add-name"
                   value={newClientName}
                   onChange={(e) => setNewClientName(e.target.value)}
                   className="col-span-3"
-                  placeholder="e.g. Acme Corp"
+                  placeholder="e.g. John Doe"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
+                <Label htmlFor="add-email" className="text-right">
                   Email*
                 </Label>
                 <Input
-                  id="email"
+                  id="add-email"
                   type="email"
                   value={newClientEmail}
                   onChange={(e) => setNewClientEmail(e.target.value)}
                   className="col-span-3"
-                  placeholder="e.g. contact@acme.com"
+                  placeholder="e.g. john.doe@example.com"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="phone" className="text-right">
+                <Label htmlFor="add-phone" className="text-right">
                   Phone
                 </Label>
                 <Input
-                  id="phone"
+                  id="add-phone"
                   type="tel"
                   value={newClientPhone}
                   onChange={(e) => setNewClientPhone(e.target.value)}
@@ -174,15 +232,15 @@ export default function ClientsPage() {
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="company" className="text-right">
+                <Label htmlFor="add-company" className="text-right">
                   Company
                 </Label>
                 <Input
-                  id="company"
+                  id="add-company"
                   value={newClientCompany}
                   onChange={(e) => setNewClientCompany(e.target.value)}
                   className="col-span-3"
-                  placeholder="If different from Name"
+                  placeholder="e.g. Acme Corp (Optional)"
                 />
               </div>
             </div>
@@ -196,6 +254,78 @@ export default function ClientsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Edit Client Dialog */}
+      <Dialog open={isEditClientDialogOpen} onOpenChange={(isOpen) => {
+          setIsEditClientDialogOpen(isOpen);
+          if (!isOpen) {
+            setEditingClient(null); // Clear editing client if dialog is closed without saving
+          }
+        }}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Edit Client</DialogTitle>
+            <DialogDescription>
+              Update the client's details. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-name" className="text-right">
+                Name*
+              </Label>
+              <Input
+                id="edit-name"
+                value={editClientName}
+                onChange={(e) => setEditClientName(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-email" className="text-right">
+                Email*
+              </Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={editClientEmail}
+                onChange={(e) => setEditClientEmail(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-phone" className="text-right">
+                Phone
+              </Label>
+              <Input
+                id="edit-phone"
+                type="tel"
+                value={editClientPhone}
+                onChange={(e) => setEditClientPhone(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="edit-company" className="text-right">
+                Company
+              </Label>
+              <Input
+                id="edit-company"
+                value={editClientCompany}
+                onChange={(e) => setEditClientCompany(e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => {
+                setIsEditClientDialogOpen(false);
+                setEditingClient(null);
+            }}>Cancel</Button>
+            <Button type="button" variant="default" onClick={handleSaveClientChanges}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Card className="shadow-lg">
         <CardHeader>
@@ -236,10 +366,9 @@ export default function ClientsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
-                            onClick={() => {
-                                toast({ title: "Coming Soon!", description: "Editing client details will be available in a future update."});
-                            }}
+                            onClick={() => handleOpenEditDialog(client)}
                           >
+                            <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
@@ -269,5 +398,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-    
