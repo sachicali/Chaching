@@ -340,7 +340,7 @@ export default function ClientsPage() {
                   <ClientDetailRow label="Email" value={selectedClient.email} icon={Mail} />
                   <ClientDetailRow label="Phone" value={selectedClient.phone} icon={Phone} />
                   <ClientDetailRow label="Address" value={selectedClient.address} icon={MapPin} />
-                  <ClientDetailRow label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
+                  
                   {selectedClient.notes && (
                     <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
                        <div className="text-sm text-muted-foreground font-medium flex items-start pt-0.5">
@@ -358,6 +358,7 @@ export default function ClientsPage() {
                     <ClientDetailRow label="Monthly Earnings (PHP)" value={selectedClient.monthlyEarnings ? formatPHP(selectedClient.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
                     <ClientDetailRow label="Total Earnings (USD)" value={selectedClient.totalEarningsUSD ? formatUSD(selectedClient.totalEarningsUSD) : "Not set"} icon={DollarSign} />
                     <ClientDetailRow label="Total Earnings (PHP)" value={selectedClient.totalEarningsUSD ? formatPHP(selectedClient.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
+                    <ClientDetailRow label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
                 </div>
               </TabsContent>
               <TabsContent value="invoices" className="mt-6">
