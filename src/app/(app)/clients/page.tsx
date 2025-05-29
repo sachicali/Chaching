@@ -21,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch, Users2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -211,6 +211,14 @@ export default function ClientsPage() {
     if (lowerStatus.includes("on hold") || lowerStatus.includes("payment pending")) return "secondary"; 
     return "secondary";
   };
+  
+  const handleClientListItemKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, clientId: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setSelectedClientId(clientId);
+    }
+  };
+
 
   return (
     // Page Root
@@ -220,7 +228,7 @@ export default function ClientsPage() {
         <div className="p-4 space-y-4"> {/* Header section */}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
-            <Button variant="default" size="sm" onClick={() => setIsAddClientDialogOpen(true)}>New client</Button>
+             <Button variant="default" size="sm" onClick={() => setIsAddClientDialogOpen(true)}>New client</Button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -237,11 +245,14 @@ export default function ClientsPage() {
           <div className="p-4 space-y-2"> {/* Inner content wrapper */}
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
-                <button
+                <div
                   key={client.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedClientId(client.id)}
+                  onKeyDown={(e) => handleClientListItemKeyDown(e, client.id)}
                   className={cn(
-                    "w-full flex items-center gap-3 p-3 rounded-md text-left hover:bg-muted transition-colors focus:outline-none focus:bg-muted",
+                    "w-full flex items-center gap-3 p-3 rounded-md text-left hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:bg-muted cursor-pointer",
                     selectedClientId === client.id && "bg-muted"
                   )}
                 >
@@ -265,15 +276,15 @@ export default function ClientsPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleOpenEditDialog(client)}>
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleOpenEditDialog(client); }}>
                         <Edit className="mr-2 h-4 w-4" /> Edit
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteClient(client.id)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleDeleteClient(client.id); }} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
                         <Trash2 className="mr-2 h-4 w-4" /> Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                </button>
+                </div>
               ))
             ) : (
               <div className="text-center py-10 text-muted-foreground">
@@ -370,7 +381,7 @@ export default function ClientsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center text-2xl">
-                        <Users className="mr-3 h-6 w-6 text-primary" />
+                        <Users2 className="mr-3 h-6 w-6 text-primary" /> 
                         Client Overview
                     </CardTitle>
                     <CardDescription>Select a client from the list on the left to view their details, or browse all clients below.</CardDescription>
@@ -417,7 +428,7 @@ export default function ClientsPage() {
             <PackageSearch className="h-16 w-16 mb-4 text-primary/30" />
             <p className="text-xl">No clients found.</p>
             <p className="text-sm">Click "New client" in the sidebar to add your first one.</p>
-            <Button variant="outline" className="mt-4" onClick={() => setIsAddClientDialogOpen(true)}>
+             <Button variant="outline" className="mt-4" onClick={() => setIsAddClientDialogOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
             </Button>
           </div>
@@ -470,3 +481,5 @@ export default function ClientsPage() {
     </div>
   );
 }
+
+    
