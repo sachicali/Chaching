@@ -3,12 +3,11 @@
 
 import type { ChartConfig } from "@/components/ui/chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { GoalTracker } from "@/components/features/goal-tracker";
-import { BarChart, LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2 } from "lucide-react";
+// import { GoalTracker } from "@/components/features/goal-tracker"; // Removed as per request to remove all mock/example data
+import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"; 
 import { 
   LineChart as RechartsActualLineChart,
-  Bar, 
   CartesianGrid, 
   XAxis, 
   YAxis, 
@@ -63,36 +62,11 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
-      // Simulate API call
+      // Simulate API call - in a real app, this would fetch data
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      const fetchedIncome = 45231.89;
-      const fetchedExpenses = 23150.50;
-      const net = fetchedIncome - fetchedExpenses;
-
-      setDashboardData({
-        totalIncome: fetchedIncome,
-        totalIncomeChange: "+20.1% from last month",
-        totalExpenses: fetchedExpenses,
-        totalExpensesChange: "+12.5% from last month",
-        netSavings: net,
-        netSavingsTargetGap: 7918.61,
-        incomeExpenseChartData: [
-          { month: 'Jan', income: 4000, expenses: 2400 },
-          { month: 'Feb', income: 3000, expenses: 1398 },
-          { month: 'Mar', income: 2000, expenses: 5800 },
-          { month: 'Apr', income: 2780, expenses: 3908 },
-          { month: 'May', income: 1890, expenses: 4800 },
-          { month: 'Jun', income: 2390, expenses: 3800 },
-        ],
-        recentTransactions: [
-          { id: 'txn1', date: '2024-07-28', description: 'Client Project Alpha Payment', type: 'income', amount: 2500.00 },
-          { id: 'txn2', date: '2024-07-27', description: 'Monthly Software Subscription', type: 'expense', amount: 49.99 },
-          { id: 'txn3', date: '2024-07-26', description: 'Office Supplies Purchase', type: 'expense', amount: 120.50 },
-          { id: 'txn4', date: '2024-07-25', description: 'Consulting Gig - Phase 1', type: 'income', amount: 1800.00 },
-          { id: 'txn5', date: '2024-07-24', description: 'Internet Bill', type: 'expense', amount: 75.00 },
-        ]
-      });
+      // Set to initial (empty) state after "fetch"
+      setDashboardData(initialDashboardState); 
       setIsLoading(false);
     };
 
@@ -168,7 +142,7 @@ export default function DashboardPage() {
               <div className="flex justify-center items-center h-[300px]">
                 <Loader2 className="h-12 w-12 animate-spin text-primary" />
               </div>
-            ) : (
+            ) : dashboardData.incomeExpenseChartData.length > 0 ? (
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <RechartsActualLineChart data={dashboardData.incomeExpenseChartData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
@@ -187,14 +161,32 @@ export default function DashboardPage() {
                   </RechartsActualLineChart>
                 </ResponsiveContainer>
               </ChartContainer>
+            ) : (
+              <div className="flex justify-center items-center h-[300px] text-muted-foreground">
+                <p>No income or expense data to display.</p>
+              </div>
             )}
           </CardContent>
         </Card>
         
         <div className="space-y-6">
-          {/* GoalTrackers remain as their data is specific to each goal instance */}
-          <GoalTracker goalName="New Equipment" targetAmount={100000} currentAmount={65000} />
-          <GoalTracker goalName="Vacation Fund" targetAmount={50000} currentAmount={15000} />
+          {/* 
+            GoalTrackers were removed as per "remove all mock data" request.
+            Users can add GoalTracker components here if they have specific goals.
+            Example:
+            <GoalTracker goalName="New Equipment" targetAmount={100000} currentAmount={0} />
+            <GoalTracker goalName="Vacation Fund" targetAmount={50000} currentAmount={0} />
+          */}
+           <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle>Financial Goals</CardTitle>
+              <CardDescription>Track your progress towards financial goals.</CardDescription>
+            </CardHeader>
+            <CardContent className="text-center py-10 text-muted-foreground">
+              <p>No goals being tracked on the dashboard currently.</p>
+              <p className="text-xs">You can add goal trackers here or manage them on the Goals page.</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

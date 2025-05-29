@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Loader2 } from "lucide-react";
@@ -14,16 +15,20 @@ export default function InsightsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [insights, setInsights] = useState<FinancialInsightsOutput | null>(null);
   const [inputData, setInputData] = useState<FinancialInsightsInput>({
-    income: 5000,
-    expenses: 3000,
-    savings: 2000,
-    spendingByCategory: { Food: 500, Utilities: 200, Entertainment: 300, Transport: 150, Subscriptions: 100 },
-    recurringExpenses: { Rent: 1200, Netflix: 15, Gym: 50 },
+    income: 0,
+    expenses: 0,
+    savings: 0,
+    spendingByCategory: {},
+    recurringExpenses: {},
   });
   const { toast } = useToast();
 
   const handleInputChange = (field: keyof FinancialInsightsInput, value: string | number | Record<string, number>) => {
-    setInputData(prev => ({ ...prev, [field]: value }));
+     if (typeof value === 'string' && !isNaN(parseFloat(value)) && (field === 'income' || field === 'expenses' || field === 'savings')) {
+      setInputData(prev => ({ ...prev, [field]: parseFloat(value) }));
+    } else {
+      setInputData(prev => ({ ...prev, [field]: value }));
+    }
   };
   
   const handleJsonInputChange = (field: 'spendingByCategory' | 'recurringExpenses', value: string) => {
@@ -66,15 +71,15 @@ export default function InsightsPage() {
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="income">Total Income</Label>
-              <Input id="income" type="number" value={inputData.income} onChange={(e) => handleInputChange('income', parseFloat(e.target.value))} />
+              <Input id="income" type="number" value={inputData.income} onChange={(e) => handleInputChange('income', parseFloat(e.target.value) || 0)} />
             </div>
             <div>
               <Label htmlFor="expenses">Total Expenses</Label>
-              <Input id="expenses" type="number" value={inputData.expenses} onChange={(e) => handleInputChange('expenses', parseFloat(e.target.value))} />
+              <Input id="expenses" type="number" value={inputData.expenses} onChange={(e) => handleInputChange('expenses', parseFloat(e.target.value) || 0)} />
             </div>
             <div>
               <Label htmlFor="savings">Total Savings</Label>
-              <Input id="savings" type="number" value={inputData.savings} onChange={(e) => handleInputChange('savings', parseFloat(e.target.value))} />
+              <Input id="savings" type="number" value={inputData.savings} onChange={(e) => handleInputChange('savings', parseFloat(e.target.value) || 0)} />
             </div>
           </div>
           <div>
@@ -82,7 +87,7 @@ export default function InsightsPage() {
             <Textarea 
               id="spendingByCategory" 
               rows={3}
-              placeholder='{ "Food": 500, "Utilities": 200 }'
+              placeholder='{ "Food": 0, "Utilities": 0 }'
               defaultValue={JSON.stringify(inputData.spendingByCategory, null, 2)}
               onChange={(e) => handleJsonInputChange('spendingByCategory', e.target.value)} 
             />
@@ -92,7 +97,7 @@ export default function InsightsPage() {
             <Textarea 
               id="recurringExpenses" 
               rows={3}
-              placeholder='{ "Rent": 1200, "Netflix": 15 }'
+              placeholder='{ "Rent": 0, "Subscription": 0 }'
               defaultValue={JSON.stringify(inputData.recurringExpenses, null, 2)}
               onChange={(e) => handleJsonInputChange('recurringExpenses', e.target.value)}
             />

@@ -1,6 +1,6 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { GoalTracker } from "@/components/features/goal-tracker";
+// import { GoalTracker } from "@/components/features/goal-tracker"; // GoalTrackers removed
 import { Target, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -23,11 +23,15 @@ export default function GoalsPage() {
           <CardDescription>Set financial goals and track your progress visually.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <GoalTracker goalName="New Laptop" targetAmount={80000} currentAmount={25000} />
-          <GoalTracker goalName="Emergency Fund" targetAmount={150000} currentAmount={145000} />
-          <GoalTracker goalName="Office Renovation" targetAmount={200000} currentAmount={10000} />
+          {/* 
+            Example GoalTrackers were removed to eliminate mock data.
+            Users can add GoalTracker components here dynamically in a real application.
+            <GoalTracker goalName="New Laptop" targetAmount={80000} currentAmount={0} />
+            <GoalTracker goalName="Emergency Fund" targetAmount={150000} currentAmount={0} />
+            <GoalTracker goalName="Office Renovation" targetAmount={200000} currentAmount={0} /> 
+          */}
            <div className="text-center py-10 text-muted-foreground md:col-span-2 lg:col-span-3">
-            <p>More goals will appear here once added.</p>
+            <p>No goals set up yet. Click "Add New Goal" to get started.</p>
           </div>
         </CardContent>
       </Card>

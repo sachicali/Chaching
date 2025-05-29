@@ -15,13 +15,13 @@ export default function DigestPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [summary, setSummary] = useState<GenerateWeeklySummaryOutput | null>(null);
   const [inputData, setInputData] = useState<GenerateWeeklySummaryInput>({
-    income: 7000,
-    expenses: 4500,
-    savings: 2500,
-    spendingByCategory: { Groceries: 1200, Dining: 800, Bills: 1500, Entertainment: 500, Travel: 500 },
-    previousWeekIncome: 6500,
-    previousWeekExpenses: 4000,
-    previousWeekSavings: 2500,
+    income: 0,
+    expenses: 0,
+    savings: 0,
+    spendingByCategory: {},
+    previousWeekIncome: 0,
+    previousWeekExpenses: 0,
+    previousWeekSavings: 0,
   });
   const { toast } = useToast();
   
@@ -69,27 +69,27 @@ export default function DigestPage() {
           <div className="grid md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="income">This Week's Income</Label>
-              <Input id="income" type="number" value={inputData.income} onChange={(e) => handleInputChange('income', parseFloat(e.target.value))} />
+              <Input id="income" type="number" value={inputData.income} onChange={(e) => handleInputChange('income', parseFloat(e.target.value) || 0)} />
             </div>
              <div>
               <Label htmlFor="expenses">This Week's Expenses</Label>
-              <Input id="expenses" type="number" value={inputData.expenses} onChange={(e) => handleInputChange('expenses', parseFloat(e.target.value))} />
+              <Input id="expenses" type="number" value={inputData.expenses} onChange={(e) => handleInputChange('expenses', parseFloat(e.target.value) || 0)} />
             </div>
             <div>
               <Label htmlFor="savings">This Week's Savings</Label>
-              <Input id="savings" type="number" value={inputData.savings} onChange={(e) => handleInputChange('savings', parseFloat(e.target.value))} />
+              <Input id="savings" type="number" value={inputData.savings} onChange={(e) => handleInputChange('savings', parseFloat(e.target.value) || 0)} />
             </div>
             <div>
               <Label htmlFor="prevIncome">Previous Week's Income</Label>
-              <Input id="prevIncome" type="number" value={inputData.previousWeekIncome} onChange={(e) => handleInputChange('previousWeekIncome', parseFloat(e.target.value))} />
+              <Input id="prevIncome" type="number" value={inputData.previousWeekIncome} onChange={(e) => handleInputChange('previousWeekIncome', parseFloat(e.target.value) || 0)} />
             </div>
             <div>
               <Label htmlFor="prevExpenses">Previous Week's Expenses</Label>
-              <Input id="prevExpenses" type="number" value={inputData.previousWeekExpenses} onChange={(e) => handleInputChange('previousWeekExpenses', parseFloat(e.target.value))} />
+              <Input id="prevExpenses" type="number" value={inputData.previousWeekExpenses} onChange={(e) => handleInputChange('previousWeekExpenses', parseFloat(e.target.value) || 0)} />
             </div>
              <div>
               <Label htmlFor="prevSavings">Previous Week's Savings</Label>
-              <Input id="prevSavings" type="number" value={inputData.previousWeekSavings} onChange={(e) => handleInputChange('previousWeekSavings', parseFloat(e.target.value))} />
+              <Input id="prevSavings" type="number" value={inputData.previousWeekSavings} onChange={(e) => handleInputChange('previousWeekSavings', parseFloat(e.target.value) || 0)} />
             </div>
           </div>
            <div>
@@ -97,7 +97,7 @@ export default function DigestPage() {
             <Textarea 
               id="spendingByCategory" 
               rows={3}
-              placeholder='{ "Groceries": 1200, "Dining": 800 }'
+              placeholder='{ "Groceries": 0, "Dining": 0 }'
               defaultValue={JSON.stringify(inputData.spendingByCategory, null, 2)}
               onChange={(e) => handleJsonInputChange('spendingByCategory', e.target.value)}
             />

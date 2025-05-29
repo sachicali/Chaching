@@ -15,18 +15,8 @@ export default function AnomaliesPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [anomalies, setAnomalies] = useState<DetectSpendingAnomaliesOutput['anomalies']>([]);
   const [inputData, setInputData] = useState<DetectSpendingAnomaliesInput>({
-    spendingData: JSON.stringify([
-      { category: "Advertising", amount: 5000 },
-      { category: "Software", amount: 300 },
-      { category: "Travel", amount: 1200 },
-      { category: "Office Supplies", amount: 150 },
-    ], null, 2),
-    averageSpendingByCategory: JSON.stringify({
-      Advertising: 1000,
-      Software: 200,
-      Travel: 800,
-      "Office Supplies": 100,
-    }, null, 2),
+    spendingData: JSON.stringify([], null, 2),
+    averageSpendingByCategory: JSON.stringify({}, null, 2),
   });
   const { toast } = useToast();
 
@@ -80,7 +70,7 @@ export default function AnomaliesPage() {
             <Textarea 
               id="spendingData" 
               rows={5}
-              placeholder='[{"category": "Advertising", "amount": 5000}]'
+              placeholder='[{"category": "Groceries", "amount": 200}]'
               value={inputData.spendingData}
               onChange={(e) => handleInputChange('spendingData', e.target.value)}
             />
@@ -90,7 +80,7 @@ export default function AnomaliesPage() {
             <Textarea 
               id="averageSpending" 
               rows={5}
-              placeholder='{"Advertising": 1000, "Software": 200}'
+              placeholder='{"Groceries": 150, "Utilities": 100}'
               value={inputData.averageSpendingByCategory}
               onChange={(e) => handleInputChange('averageSpendingByCategory', e.target.value)}
             />

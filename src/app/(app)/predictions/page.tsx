@@ -15,15 +15,8 @@ export default function PredictionsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [prediction, setPrediction] = useState<PredictIncomeOutput | null>(null);
   const [inputData, setInputData] = useState<PredictIncomeInput>({
-    historicalIncomeData: JSON.stringify([
-      { date: "2023-01-01", income: 5000 },
-      { date: "2023-02-01", income: 5200 },
-      { date: "2023-03-01", income: 4800 },
-      { date: "2023-04-01", income: 5500 },
-      { date: "2023-05-01", income: 6000 },
-      { date: "2023-06-01", income: 5800 },
-    ], null, 2),
-    seasonality: "Income tends to be slightly higher in Q2 and Q4.",
+    historicalIncomeData: JSON.stringify([], null, 2),
+    seasonality: "",
   });
   const { toast } = useToast();
 
@@ -71,7 +64,7 @@ export default function PredictionsPage() {
             <Textarea 
               id="historicalData" 
               rows={8}
-              placeholder='[{"date": "YYYY-MM-DD", "income": 5000}]'
+              placeholder='[{"date": "YYYY-MM-DD", "income": 0}]'
               value={inputData.historicalIncomeData}
               onChange={(e) => handleInputChange('historicalIncomeData', e.target.value)}
             />
@@ -80,7 +73,7 @@ export default function PredictionsPage() {
             <Label htmlFor="seasonality">Seasonality (Optional)</Label>
             <Input 
               id="seasonality" 
-              placeholder="e.g., Income is higher in summer months"
+              placeholder="e.g., Income is higher in Q2"
               value={inputData.seasonality || ""}
               onChange={(e) => handleInputChange('seasonality', e.target.value)}
             />
