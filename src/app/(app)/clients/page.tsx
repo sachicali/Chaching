@@ -149,7 +149,7 @@ export default function ClientsPage() {
       phone: newClientPhone.trim() || undefined, company: newClientCompany.trim() || undefined,
       monthlyEarnings: newClientMonthlyEarnings ? parseFloat(newClientMonthlyEarnings) : undefined,
       totalEarningsUSD: newClientTotalEarningsUSD ? parseFloat(newClientTotalEarningsUSD) : undefined,
-      paymentMedium: newClientPaymentMedium.trim() || undefined, status: newClientStatus || undefined,
+      paymentMedium: newClientPaymentMedium.trim() || undefined, status: newClientStatus || clientStatusOptions[0],
       address: newClientAddress.trim() || undefined, notes: newClientNotes.trim() || undefined,
       avatarUrl: newClientAvatarUrl.trim() || undefined,
     });
@@ -179,7 +179,7 @@ export default function ClientsPage() {
       phone: editClientPhone.trim() || undefined, company: editClientCompany.trim() || undefined,
       monthlyEarnings: editClientMonthlyEarnings ? parseFloat(editClientMonthlyEarnings) : undefined,
       totalEarningsUSD: editClientTotalEarningsUSD ? parseFloat(editClientTotalEarningsUSD) : undefined,
-      paymentMedium: editClientPaymentMedium.trim() || undefined, status: editClientStatus || undefined,
+      paymentMedium: editClientPaymentMedium.trim() || undefined, status: editClientStatus || clientStatusOptions[0],
       address: editClientAddress.trim() || undefined, notes: editClientNotes.trim() || undefined,
       avatarUrl: editClientAvatarUrl.trim() || editingClient.avatarUrl,
     });
@@ -243,7 +243,7 @@ export default function ClientsPage() {
     // Page Root
     <div className="flex h-full">
       {/* Left Pane: Client List */}
-      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50">
+      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full">
         <div className="p-4 space-y-4"> {/* Header section */}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
@@ -517,3 +517,4 @@ export default function ClientsPage() {
     </div>
   );
 }
+
