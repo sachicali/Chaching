@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added Card imports
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch } from "lucide-react";
 import {
   DropdownMenu,
