@@ -24,10 +24,9 @@ export default function AppLayout({
             </SidebarTrigger>
             <h1 className="text-lg font-semibold text-primary">Chaching</h1>
           </header>
-          <ScrollArea className="flex-1 w-full"> {/* Ensured w-full */}
-            <main className="w-full p-4 md:p-6 lg:py-8 lg:px-0"> {/* Changed lg:p-8 to lg:py-8 lg:px-0 */}
-              {children}
-            </main>
+          {/* Apply padding directly to ScrollArea. The viewport within ScrollArea will be full width of this padded area. */}
+          <ScrollArea className="flex-1 w-full p-4 md:p-6 lg:py-8 lg:px-0">
+            {children}
           </ScrollArea>
         </SidebarInset>
       </div>
