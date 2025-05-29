@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-  // DialogTrigger, // No longer directly used for the problematic buttons
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +20,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"; // Added Card imports
+import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,7 +91,8 @@ export default function ClientsPage() {
     if (!searchTerm) return clients;
     return clients.filter(client =>
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (client.company && client.company.toLowerCase().includes(searchTerm.toLowerCase()))
+      (client.company && client.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      client.email.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [clients, searchTerm]);
 
@@ -101,12 +102,16 @@ export default function ClientsPage() {
   }, [clients, selectedClientId]);
 
   useEffect(() => {
-    if (!selectedClientId && filteredClients.length > 0) {
-      setSelectedClientId(filteredClients[0].id);
-    } else if (filteredClients.length === 0) {
-      setSelectedClientId(null);
+    // If a client is selected but then filtered out by search, deselect it.
+    if (selectedClientId && !filteredClients.find(c => c.id === selectedClientId)) {
+        setSelectedClientId(null);
     }
+    // If no client is selected AND the list is not empty, select the first one by default (optional behavior)
+    // else if (!selectedClientId && filteredClients.length > 0) {
+    //   setSelectedClientId(filteredClients[0].id);
+    // }
   }, [filteredClients, selectedClientId]);
+
 
   const resetAddClientForm = () => {
     setNewClientName(""); setNewClientEmail(""); setNewClientPhone(""); setNewClientCompany("");
@@ -184,13 +189,13 @@ export default function ClientsPage() {
   const handleDeleteClient = (clientId: string) => {
     deleteClientFromContext(clientId);
     if (selectedClientId === clientId) {
-      setSelectedClientId(filteredClients.length > 0 ? filteredClients[0].id : null);
+      setSelectedClientId(null); // Deselect if the deleted client was selected
     }
   };
   
   const ClientDetailRow = ({ label, value, icon }: { label: string, value?: string | number, icon?: React.ElementType }) => {
     const IconComponent = icon;
-    if (!value && value !==0) return null; // Allow 0 to be displayed
+    if (!value && value !==0) return null; 
     return (
       <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
         <div className="text-sm text-muted-foreground font-medium flex items-center">
@@ -202,13 +207,13 @@ export default function ClientsPage() {
     );
   };
 
-  const getStatusBadgeVariant = (status?: string) => {
+  const getStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
     if (!status) return "secondary";
     const lowerStatus = status.toLowerCase();
-    if (lowerStatus.includes("active") || lowerStatus.includes("on roster")) return "default"; // bg-primary
+    if (lowerStatus.includes("active") || lowerStatus.includes("on roster")) return "default"; 
     if (lowerStatus.includes("prospect")) return "outline"; 
     if (lowerStatus.includes("former") || lowerStatus.includes("inactive")) return "destructive";
-    if (lowerStatus.includes("on hold") || lowerStatus.includes("payment pending")) return "secondary"; // Using secondary for neutral/pending
+    if (lowerStatus.includes("on hold") || lowerStatus.includes("payment pending")) return "secondary"; 
     return "secondary";
   };
 
@@ -226,7 +231,7 @@ export default function ClientsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder="Search clients"
+              placeholder="Search clients..."
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -246,21 +251,21 @@ export default function ClientsPage() {
                   )}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={client.avatarUrl || `https://placehold.co/60x60.png?text=${client.name.charAt(0)}`} alt={client.name} data-ai-hint="avatar" />
+                    <AvatarImage src={client.avatarUrl || `https://placehold.co/60x60.png?text=${client.name.charAt(0)}`} alt={client.name} data-ai-hint="avatar user"/>
                     <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <div className="font-semibold text-foreground">{client.name}</div>
-                    <div className="text-xs text-muted-foreground">{client.company || "Individual"}</div>
+                  <div className="flex-1 min-w-0"> {/* Added min-w-0 for truncation */}
+                    <div className="font-semibold text-foreground truncate">{client.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{client.company || "Individual"}</div>
                   </div>
                   {client.status && (
-                     <Badge variant={getStatusBadgeVariant(client.status)} className="ml-auto mr-2 group-hover:hidden">
+                     <Badge variant={getStatusBadgeVariant(client.status)} className="ml-auto mr-2 group-hover:hidden flex-shrink-0">
                        {client.status}
                      </Badge>
                   )}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto flex-shrink-0">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -277,16 +282,16 @@ export default function ClientsPage() {
               ))
             ) : (
               <div className="text-center py-10 text-muted-foreground">
-                <Contact className="mx-auto h-12 w-12 mb-4 text-primary/50" />
-                <p>No clients found.</p>
-                 <p className="text-sm">Click "New client" to add your first one.</p>
+                <PackageSearch className="mx-auto h-12 w-12 mb-4 text-primary/50" />
+                <p>No clients found {searchTerm && "matching your search"}.</p>
+                {!searchTerm && <p className="text-sm">Click "New client" to add your first one.</p>}
               </div>
             )}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Right Pane: Client Details */}
+      {/* Right Pane: Client Details or Overview Table */}
       <div className="flex-1 p-6 lg:p-8 overflow-y-auto">
         {selectedClient ? (
           <div className="space-y-6">
@@ -366,11 +371,57 @@ export default function ClientsPage() {
               </TabsContent>
             </Tabs>
           </div>
+        ) : filteredClients.length > 0 ? (
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center text-2xl">
+                        <Users className="mr-3 h-6 w-6 text-primary" />
+                        Client Overview
+                    </CardTitle>
+                    <CardDescription>Select a client from the list on the left to view their details, or browse all clients below.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Client</TableHead>
+                                <TableHead>Company</TableHead>
+                                <TableHead>Email</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead className="text-right">Monthly (USD)</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredClients.map((client) => (
+                                <TableRow key={client.id} onClick={() => setSelectedClientId(client.id)} className="cursor-pointer hover:bg-muted">
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-8 w-8">
+                                                <AvatarImage src={client.avatarUrl || `https://placehold.co/40x40.png?text=${client.name.charAt(0)}`} alt={client.name} data-ai-hint="avatar client"/>
+                                                <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
+                                            </Avatar>
+                                            <span className="font-medium text-foreground">{client.name}</span>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-muted-foreground">{client.company || "N/A"}</TableCell>
+                                    <TableCell className="text-muted-foreground">{client.email}</TableCell>
+                                    <TableCell>
+                                        {client.status && <Badge variant={getStatusBadgeVariant(client.status)}>{client.status}</Badge>}
+                                    </TableCell>
+                                    <TableCell className="text-right text-muted-foreground">
+                                        {client.monthlyEarnings ? formatUSD(client.monthlyEarnings) : "-"}
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Contact className="h-16 w-16 mb-4 text-primary/30" />
-            <p className="text-xl">Select a client to view their details</p>
-            <p className="text-sm">or create a new client to get started.</p>
+            <PackageSearch className="h-16 w-16 mb-4 text-primary/30" />
+            <p className="text-xl">No clients found.</p>
+            <p className="text-sm">Click "New client" in the sidebar to add your first one.</p>
             <Button variant="outline" className="mt-4" onClick={() => setIsAddClientDialogOpen(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
             </Button>
@@ -424,4 +475,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
