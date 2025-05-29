@@ -21,7 +21,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch, Users2 } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch, Users2, BriefcaseBusiness } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -215,7 +215,19 @@ export default function ClientsPage() {
   const handleClientListItemKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, clientId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      setSelectedClientId(clientId);
+      if (selectedClientId === clientId) {
+        setSelectedClientId(null); // Deselect if already selected
+      } else {
+        setSelectedClientId(clientId); // Select if not selected
+      }
+    }
+  };
+
+  const handleClientSelect = (clientId: string) => {
+    if (selectedClientId === clientId) {
+      setSelectedClientId(null); // Deselect if already selected
+    } else {
+      setSelectedClientId(clientId); // Select if not selected
     }
   };
 
@@ -249,7 +261,7 @@ export default function ClientsPage() {
                   key={client.id}
                   role="button"
                   tabIndex={0}
-                  onClick={() => setSelectedClientId(client.id)}
+                  onClick={() => handleClientSelect(client.id)}
                   onKeyDown={(e) => handleClientListItemKeyDown(e, client.id)}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-md text-left hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:bg-muted cursor-pointer",
@@ -305,7 +317,7 @@ export default function ClientsPage() {
                 <div>
                     <h2 className="text-3xl font-bold text-foreground">{selectedClient.name}</h2>
                     <p className="text-md text-muted-foreground flex items-center">
-                        <Briefcase className="mr-2 h-4 w-4" /> {selectedClient.company || "Individual"}
+                        <BriefcaseBusiness className="mr-2 h-4 w-4" /> {selectedClient.company || "Individual"}
                     </p>
                 </div>
                 {selectedClient.status && (
@@ -399,7 +411,7 @@ export default function ClientsPage() {
                         </TableHeader>
                         <TableBody>
                             {filteredClients.map((client) => (
-                                <TableRow key={client.id} onClick={() => setSelectedClientId(client.id)} className="cursor-pointer hover:bg-muted">
+                                <TableRow key={client.id} onClick={() => handleClientSelect(client.id)} className="cursor-pointer hover:bg-muted">
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-8 w-8">
