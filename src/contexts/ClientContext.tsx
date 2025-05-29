@@ -16,11 +16,13 @@ export interface Client {
   paymentMedium?: string;
   status?: string;
   address?: string;
+  notes?: string; // Added notes
+  avatarUrl?: string; // Added avatarUrl
 }
 
 interface ClientContextType {
   clients: Client[];
-  addClient: (client: Omit<Client, 'id'>) => void;
+  addClient: (client: Omit<Client, 'id' | 'avatarUrl'>) => void;
   updateClient: (updatedClient: Client) => void;
   deleteClient: (clientId: string) => void;
   getClientById: (clientId: string) => Client | undefined;
@@ -32,8 +34,13 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const { toast } = useToast();
 
-  const addClient = useCallback((clientData: Omit<Client, 'id'>) => {
-    const newClient = { ...clientData, id: Date.now().toString() };
+  const addClient = useCallback((clientData: Omit<Client, 'id' | 'avatarUrl'>) => {
+    const newClient = { 
+      ...clientData, 
+      id: Date.now().toString(),
+      // For now, assign a generic placeholder avatar
+      avatarUrl: `https://placehold.co/60x60.png?text=${clientData.name.charAt(0)}` 
+    };
     setClients(prev => [...prev, newClient]);
     toast({
       title: "Client Added",
@@ -42,7 +49,7 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
 
   const updateClient = useCallback((updatedClient: Client) => {
-    setClients(prev => prev.map(c => c.id === updatedClient.id ? updatedClient : c));
+    setClients(prev => prev.map(c => c.id === updatedClient.id ? { ...updatedClient, avatarUrl: updatedClient.avatarUrl || `https://placehold.co/60x60.png?text=${updatedClient.name.charAt(0)}` } : c));
     toast({
       title: "Client Updated",
       description: `${updatedClient.name}'s details have been updated.`,
