@@ -29,7 +29,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Users, MoreHorizontal, Edit, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { PlusCircle, Users, MoreHorizontal, Edit, DollarSign, Building, Mail, PhoneIcon, MapPin, CreditCard, Activity } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +40,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useClients, type Client } from "@/contexts/ClientContext";
 
-const EXCHANGE_RATE_USD_TO_PHP = 58.75; // Example rate, fetch from API in a real app
+const EXCHANGE_RATE_USD_TO_PHP = 58.75; 
 
 const formatUSD = (value?: number) => {
   if (value === undefined || value === null) return "-";
@@ -63,6 +64,10 @@ export default function ClientsPage() {
   const [newClientPhone, setNewClientPhone] = useState("");
   const [newClientCompany, setNewClientCompany] = useState("");
   const [newClientMonthlyEarnings, setNewClientMonthlyEarnings] = useState<string>("");
+  const [newClientTotalEarningsUSD, setNewClientTotalEarningsUSD] = useState<string>("");
+  const [newClientPaymentMedium, setNewClientPaymentMedium] = useState("");
+  const [newClientStatus, setNewClientStatus] = useState("");
+  const [newClientAddress, setNewClientAddress] = useState("");
 
 
   // Form state for editing an existing client
@@ -71,17 +76,21 @@ export default function ClientsPage() {
   const [editClientPhone, setEditClientPhone] = useState("");
   const [editClientCompany, setEditClientCompany] = useState("");
   const [editClientMonthlyEarnings, setEditClientMonthlyEarnings] = useState<string>("");
+  const [editClientTotalEarningsUSD, setEditClientTotalEarningsUSD] = useState<string>("");
+  const [editClientPaymentMedium, setEditClientPaymentMedium] = useState("");
+  const [editClientStatus, setEditClientStatus] = useState("");
+  const [editClientAddress, setEditClientAddress] = useState("");
 
 
   const { toast } = useToast();
 
-  const totalClientEarningsUSD = useMemo(() => {
+  const totalProjectedMonthlyEarningsUSD = useMemo(() => {
     return clients.reduce((sum, client) => sum + (client.monthlyEarnings || 0), 0);
   }, [clients]);
 
-  const totalClientEarningsPHP = useMemo(() => {
-    return totalClientEarningsUSD * EXCHANGE_RATE_USD_TO_PHP;
-  }, [totalClientEarningsUSD]);
+  const totalProjectedMonthlyEarningsPHP = useMemo(() => {
+    return totalProjectedMonthlyEarningsUSD * EXCHANGE_RATE_USD_TO_PHP;
+  }, [totalProjectedMonthlyEarningsUSD]);
 
   const resetAddClientForm = () => {
     setNewClientName("");
@@ -89,6 +98,10 @@ export default function ClientsPage() {
     setNewClientPhone("");
     setNewClientCompany("");
     setNewClientMonthlyEarnings("");
+    setNewClientTotalEarningsUSD("");
+    setNewClientPaymentMedium("");
+    setNewClientStatus("");
+    setNewClientAddress("");
   };
 
   const handleAddClient = () => {
@@ -108,11 +121,20 @@ export default function ClientsPage() {
         });
         return;
     }
-    const earnings = newClientMonthlyEarnings ? parseFloat(newClientMonthlyEarnings) : undefined;
-    if (newClientMonthlyEarnings && (isNaN(earnings!) || earnings! < 0)) {
+    const monthlyEarnings = newClientMonthlyEarnings ? parseFloat(newClientMonthlyEarnings) : undefined;
+    if (newClientMonthlyEarnings && (isNaN(monthlyEarnings!) || monthlyEarnings! < 0)) {
         toast({
-            title: "Invalid Earnings",
+            title: "Invalid Monthly Earnings",
             description: "Monthly Earnings (USD) must be a valid positive number.",
+            variant: "destructive",
+        });
+        return;
+    }
+    const totalEarnings = newClientTotalEarningsUSD ? parseFloat(newClientTotalEarningsUSD) : undefined;
+    if (newClientTotalEarningsUSD && (isNaN(totalEarnings!) || totalEarnings! < 0)) {
+        toast({
+            title: "Invalid Total Earnings",
+            description: "Total Earnings (USD) must be a valid positive number.",
             variant: "destructive",
         });
         return;
@@ -123,7 +145,11 @@ export default function ClientsPage() {
       email: newClientEmail.trim(),
       phone: newClientPhone.trim() || undefined,
       company: newClientCompany.trim() || undefined,
-      monthlyEarnings: earnings,
+      monthlyEarnings: monthlyEarnings,
+      totalEarningsUSD: totalEarnings,
+      paymentMedium: newClientPaymentMedium.trim() || undefined,
+      status: newClientStatus.trim() || undefined,
+      address: newClientAddress.trim() || undefined,
     });
     
     resetAddClientForm();
@@ -137,6 +163,10 @@ export default function ClientsPage() {
     setEditClientPhone(client.phone || "");
     setEditClientCompany(client.company || "");
     setEditClientMonthlyEarnings(client.monthlyEarnings?.toString() || "");
+    setEditClientTotalEarningsUSD(client.totalEarningsUSD?.toString() || "");
+    setEditClientPaymentMedium(client.paymentMedium || "");
+    setEditClientStatus(client.status || "");
+    setEditClientAddress(client.address || "");
     setIsEditClientDialogOpen(true);
   };
 
@@ -159,11 +189,20 @@ export default function ClientsPage() {
       });
       return;
     }
-    const earnings = editClientMonthlyEarnings ? parseFloat(editClientMonthlyEarnings) : undefined;
-     if (editClientMonthlyEarnings && (isNaN(earnings!) || earnings! < 0)) {
+    const monthlyEarnings = editClientMonthlyEarnings ? parseFloat(editClientMonthlyEarnings) : undefined;
+     if (editClientMonthlyEarnings && (isNaN(monthlyEarnings!) || monthlyEarnings! < 0)) {
         toast({
-            title: "Invalid Earnings",
+            title: "Invalid Monthly Earnings",
             description: "Monthly Earnings (USD) must be a valid positive number.",
+            variant: "destructive",
+        });
+        return;
+    }
+    const totalEarnings = editClientTotalEarningsUSD ? parseFloat(editClientTotalEarningsUSD) : undefined;
+    if (editClientTotalEarningsUSD && (isNaN(totalEarnings!) || totalEarnings! < 0)) {
+        toast({
+            title: "Invalid Total Earnings",
+            description: "Total Earnings (USD) must be a valid positive number.",
             variant: "destructive",
         });
         return;
@@ -175,7 +214,11 @@ export default function ClientsPage() {
       email: editClientEmail.trim(),
       phone: editClientPhone.trim() || undefined,
       company: editClientCompany.trim() || undefined,
-      monthlyEarnings: earnings,
+      monthlyEarnings: monthlyEarnings,
+      totalEarningsUSD: totalEarnings,
+      paymentMedium: editClientPaymentMedium.trim() || undefined,
+      status: editClientStatus.trim() || undefined,
+      address: editClientAddress.trim() || undefined,
     });
 
     setIsEditClientDialogOpen(false);
@@ -203,14 +246,14 @@ export default function ClientsPage() {
               <PlusCircle className="mr-2 h-4 w-4" /> Add New Client
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[480px]">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Client</DialogTitle>
               <DialogDescription>
                 Enter the details for your new client. Click save when you're done.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="add-name" className="text-right">
                   Name*
@@ -275,6 +318,56 @@ export default function ClientsPage() {
                   min="0"
                 />
               </div>
+               <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="add-total-earnings" className="text-right">
+                  Total Earnings (USD)
+                </Label>
+                <Input
+                  id="add-total-earnings"
+                  type="number"
+                  value={newClientTotalEarningsUSD}
+                  onChange={(e) => setNewClientTotalEarningsUSD(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. 25000 (Optional)"
+                  min="0"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="add-payment-medium" className="text-right">
+                  Payment Medium
+                </Label>
+                <Input
+                  id="add-payment-medium"
+                  value={newClientPaymentMedium}
+                  onChange={(e) => setNewClientPaymentMedium(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. Bank Transfer (Optional)"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="add-status" className="text-right">
+                  Status
+                </Label>
+                <Input
+                  id="add-status"
+                  value={newClientStatus}
+                  onChange={(e) => setNewClientStatus(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. On Roster (Optional)"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="add-address" className="text-right">
+                  Address
+                </Label>
+                <Input
+                  id="add-address"
+                  value={newClientAddress}
+                  onChange={(e) => setNewClientAddress(e.target.value)}
+                  className="col-span-3"
+                  placeholder="(Optional)"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => {
@@ -287,7 +380,6 @@ export default function ClientsPage() {
         </Dialog>
       </div>
 
-      {/* Total Projected Monthly Earnings Card */}
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center">
@@ -300,10 +392,10 @@ export default function ClientsPage() {
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-positive">
-            {formatUSD(totalClientEarningsUSD)}
+            {formatUSD(totalProjectedMonthlyEarningsUSD)}
           </div>
           <div className="text-xl font-medium text-muted-foreground mt-1">
-            (approx. {formatPHP(totalClientEarningsPHP)})
+            (approx. {formatPHP(totalProjectedMonthlyEarningsPHP)})
           </div>
           {clients.length === 0 && (
             <p className="text-sm text-muted-foreground mt-2">
@@ -314,21 +406,20 @@ export default function ClientsPage() {
       </Card>
 
 
-      {/* Edit Client Dialog */}
       <Dialog open={isEditClientDialogOpen} onOpenChange={(isOpen) => {
           setIsEditClientDialogOpen(isOpen);
           if (!isOpen) {
-            setEditingClient(null); // Clear editing client if dialog is closed without saving
+            setEditingClient(null);
           }
         }}>
-        <DialogContent className="sm:max-w-[480px]">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Client</DialogTitle>
             <DialogDescription>
               Update the client's details. Click save when you're done.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="edit-name" className="text-right">
                 Name*
@@ -389,6 +480,53 @@ export default function ClientsPage() {
                   min="0"
                 />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-total-earnings" className="text-right">
+                  Total Earnings (USD)
+                </Label>
+                <Input
+                  id="edit-total-earnings"
+                  type="number"
+                  value={editClientTotalEarningsUSD}
+                  onChange={(e) => setEditClientTotalEarningsUSD(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. 25000 (Optional)"
+                  min="0"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-payment-medium" className="text-right">
+                  Payment Medium
+                </Label>
+                <Input
+                  id="edit-payment-medium"
+                  value={editClientPaymentMedium}
+                  onChange={(e) => setEditClientPaymentMedium(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-status" className="text-right">
+                  Status
+                </Label>
+                <Input
+                  id="edit-status"
+                  value={editClientStatus}
+                  onChange={(e) => setEditClientStatus(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-address" className="text-right">
+                  Address
+                </Label>
+                <Input
+                  id="edit-address"
+                  value={editClientAddress}
+                  onChange={(e) => setEditClientAddress(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => {
@@ -415,12 +553,17 @@ export default function ClientsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Monthly Earnings (USD)</TableHead>
-                  <TableHead>Monthly Earnings (PHP)</TableHead>
+                  <TableHead><Users className="inline-block mr-1 h-4 w-4"/>Name</TableHead>
+                  <TableHead><Mail className="inline-block mr-1 h-4 w-4"/>Email</TableHead>
+                  <TableHead><Building className="inline-block mr-1 h-4 w-4"/>Company</TableHead>
+                  <TableHead><PhoneIcon className="inline-block mr-1 h-4 w-4"/>Phone</TableHead>
+                  <TableHead><DollarSign className="inline-block mr-1 h-4 w-4"/>Monthly (USD)</TableHead>
+                  <TableHead><DollarSign className="inline-block mr-1 h-4 w-4"/>Monthly (PHP)</TableHead>
+                  <TableHead><DollarSign className="inline-block mr-1 h-4 w-4"/>Total (USD)</TableHead>
+                  <TableHead><DollarSign className="inline-block mr-1 h-4 w-4"/>Total (PHP)</TableHead>
+                  <TableHead><CreditCard className="inline-block mr-1 h-4 w-4"/>Payment Medium</TableHead>
+                  <TableHead><Activity className="inline-block mr-1 h-4 w-4"/>Status</TableHead>
+                  <TableHead><MapPin className="inline-block mr-1 h-4 w-4"/>Address</TableHead>
                   <TableHead className="text-right w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -433,6 +576,18 @@ export default function ClientsPage() {
                     <TableCell>{client.phone || "-"}</TableCell>
                     <TableCell>{formatUSD(client.monthlyEarnings)}</TableCell>
                     <TableCell>{formatPHP(client.monthlyEarnings ? client.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP : undefined)}</TableCell>
+                    <TableCell>{formatUSD(client.totalEarningsUSD)}</TableCell>
+                    <TableCell>{formatPHP(client.totalEarningsUSD ? client.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP : undefined)}</TableCell>
+                    <TableCell>{client.paymentMedium || "-"}</TableCell>
+                    <TableCell>
+                      {client.status ? (
+                        <Badge variant={client.status.toLowerCase() === 'on roster' ? 'default' : 'secondary'} 
+                               className={client.status.toLowerCase() === 'on roster' ? 'bg-positive text-positive-foreground hover:bg-positive/90' : ''}>
+                          {client.status}
+                        </Badge>
+                      ) : "-"}
+                    </TableCell>
+                    <TableCell>{client.address || "-"}</TableCell>
                     <TableCell className="text-right">
                        <DropdownMenu>
                         <DropdownMenuTrigger asChild>

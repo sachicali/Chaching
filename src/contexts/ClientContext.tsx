@@ -12,6 +12,10 @@ export interface Client {
   phone?: string;
   company?: string;
   monthlyEarnings?: number;
+  totalEarningsUSD?: number;
+  paymentMedium?: string;
+  status?: string;
+  address?: string;
 }
 
 interface ClientContextType {
