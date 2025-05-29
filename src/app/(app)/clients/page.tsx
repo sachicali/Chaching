@@ -30,13 +30,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Users, MoreHorizontal, Edit, DollarSign, Building, Mail, PhoneIcon, MapPin, CreditCard, Activity } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit, DollarSign, Building, Mail, PhoneIcon, MapPin, CreditCard, Activity, ListChecks } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useClients, type Client } from "@/contexts/ClientContext";
 
@@ -52,6 +59,8 @@ const formatPHP = (value?: number) => {
   return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
 };
 
+const clientStatusOptions = ["On Roster", "Prospect", "Former Client", "On Hold", "Inactive"];
+
 export default function ClientsPage() {
   const { clients, addClient, updateClient, deleteClient: deleteClientFromContext } = useClients();
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
@@ -66,7 +75,7 @@ export default function ClientsPage() {
   const [newClientMonthlyEarnings, setNewClientMonthlyEarnings] = useState<string>("");
   const [newClientTotalEarningsUSD, setNewClientTotalEarningsUSD] = useState<string>("");
   const [newClientPaymentMedium, setNewClientPaymentMedium] = useState("");
-  const [newClientStatus, setNewClientStatus] = useState("");
+  const [newClientStatus, setNewClientStatus] = useState(""); // Will be set by Select
   const [newClientAddress, setNewClientAddress] = useState("");
 
 
@@ -78,7 +87,7 @@ export default function ClientsPage() {
   const [editClientMonthlyEarnings, setEditClientMonthlyEarnings] = useState<string>("");
   const [editClientTotalEarningsUSD, setEditClientTotalEarningsUSD] = useState<string>("");
   const [editClientPaymentMedium, setEditClientPaymentMedium] = useState("");
-  const [editClientStatus, setEditClientStatus] = useState("");
+  const [editClientStatus, setEditClientStatus] = useState(""); // Will be set by Select
   const [editClientAddress, setEditClientAddress] = useState("");
 
 
@@ -148,7 +157,7 @@ export default function ClientsPage() {
       monthlyEarnings: monthlyEarnings,
       totalEarningsUSD: totalEarnings,
       paymentMedium: newClientPaymentMedium.trim() || undefined,
-      status: newClientStatus.trim() || undefined,
+      status: newClientStatus || undefined,
       address: newClientAddress.trim() || undefined,
     });
     
@@ -217,7 +226,7 @@ export default function ClientsPage() {
       monthlyEarnings: monthlyEarnings,
       totalEarningsUSD: totalEarnings,
       paymentMedium: editClientPaymentMedium.trim() || undefined,
-      status: editClientStatus.trim() || undefined,
+      status: editClientStatus || undefined,
       address: editClientAddress.trim() || undefined,
     });
 
@@ -348,13 +357,16 @@ export default function ClientsPage() {
                 <Label htmlFor="add-status" className="text-right">
                   Status
                 </Label>
-                <Input
-                  id="add-status"
-                  value={newClientStatus}
-                  onChange={(e) => setNewClientStatus(e.target.value)}
-                  className="col-span-3"
-                  placeholder="e.g. On Roster (Optional)"
-                />
+                <Select value={newClientStatus} onValueChange={setNewClientStatus}>
+                  <SelectTrigger className="col-span-3" id="add-status">
+                    <SelectValue placeholder="Select status (Optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientStatusOptions.map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="add-address" className="text-right">
@@ -509,12 +521,16 @@ export default function ClientsPage() {
                 <Label htmlFor="edit-status" className="text-right">
                   Status
                 </Label>
-                <Input
-                  id="edit-status"
-                  value={editClientStatus}
-                  onChange={(e) => setEditClientStatus(e.target.value)}
-                  className="col-span-3"
-                />
+                 <Select value={editClientStatus} onValueChange={setEditClientStatus}>
+                  <SelectTrigger className="col-span-3" id="edit-status">
+                    <SelectValue placeholder="Select status (Optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {clientStatusOptions.map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-address" className="text-right">
@@ -562,7 +578,7 @@ export default function ClientsPage() {
                   <TableHead><DollarSign className="inline-block mr-1 h-4 w-4"/>Total (USD)</TableHead>
                   <TableHead><DollarSign className="inline-block mr-1 h-4 w-4"/>Total (PHP)</TableHead>
                   <TableHead><CreditCard className="inline-block mr-1 h-4 w-4"/>Payment Medium</TableHead>
-                  <TableHead><Activity className="inline-block mr-1 h-4 w-4"/>Status</TableHead>
+                  <TableHead><ListChecks className="inline-block mr-1 h-4 w-4"/>Status</TableHead>
                   <TableHead><MapPin className="inline-block mr-1 h-4 w-4"/>Address</TableHead>
                   <TableHead className="text-right w-[100px]">Actions</TableHead>
                 </TableRow>
@@ -630,3 +646,5 @@ export default function ClientsPage() {
     </div>
   );
 }
+
+    
