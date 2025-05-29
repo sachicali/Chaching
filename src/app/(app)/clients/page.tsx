@@ -37,15 +37,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  company?: string;
-  monthlyEarnings?: number;
-}
+import { useClients, type Client } from "@/contexts/ClientContext";
 
 const formatCurrency = (value?: number) => {
   if (value === undefined || value === null) return "-";
@@ -53,7 +45,7 @@ const formatCurrency = (value?: number) => {
 };
 
 export default function ClientsPage() {
-  const [clients, setClients] = useState<Client[]>([]);
+  const { clients, addClient, updateClient, deleteClient: deleteClientFromContext } = useClients();
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -111,19 +103,12 @@ export default function ClientsPage() {
         return;
     }
 
-
-    const newClient: Client = {
-      id: Date.now().toString(), 
+    addClient({
       name: newClientName.trim(),
       email: newClientEmail.trim(),
       phone: newClientPhone.trim() || undefined,
       company: newClientCompany.trim() || undefined,
       monthlyEarnings: earnings,
-    };
-    setClients((prevClients) => [...prevClients, newClient]);
-    toast({
-      title: "Client Added",
-      description: `${newClient.name} has been added to your client list.`,
     });
     
     resetAddClientForm();
@@ -169,22 +154,13 @@ export default function ClientsPage() {
         return;
     }
 
-    setClients(clients.map(client =>
-      client.id === editingClient.id
-        ? {
-            ...client,
-            name: editClientName.trim(),
-            email: editClientEmail.trim(),
-            phone: editClientPhone.trim() || undefined,
-            company: editClientCompany.trim() || undefined,
-            monthlyEarnings: earnings,
-          }
-        : client
-    ));
-
-    toast({
-      title: "Client Updated",
-      description: `${editClientName.trim()} has been updated.`,
+    updateClient({
+      id: editingClient.id,
+      name: editClientName.trim(),
+      email: editClientEmail.trim(),
+      phone: editClientPhone.trim() || undefined,
+      company: editClientCompany.trim() || undefined,
+      monthlyEarnings: earnings,
     });
 
     setIsEditClientDialogOpen(false);
@@ -193,12 +169,7 @@ export default function ClientsPage() {
 
 
   const handleDeleteClient = (clientId: string) => {
-    const clientToDelete = clients.find(client => client.id === clientId);
-    setClients(clients.filter(client => client.id !== clientId));
-    toast({
-        title: "Client Deleted",
-        description: `${clientToDelete?.name || 'The client'} has been removed.`,
-    });
+    deleteClientFromContext(clientId);
   };
 
 
@@ -460,5 +431,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-    
