@@ -12,11 +12,10 @@ export default function AppLayout({
 }) {
   return (
     <SidebarProvider defaultOpen>
-      <div className="flex min-h-screen">
+      <div className="flex flex-1 min-h-0"> {/* Ensures this container grows and respects flex parent */}
         <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 w-full"> {/* Added w-full */}
+        <SidebarInset className="flex flex-col flex-1 w-full"> 
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden">
-            {/* Mobile sidebar trigger */}
             <SidebarTrigger asChild>
                <Button variant="outline" size="icon" className="md:hidden">
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
@@ -24,7 +23,6 @@ export default function AppLayout({
             </SidebarTrigger>
             <h1 className="text-lg font-semibold text-primary">Chaching</h1>
           </header>
-          {/* Apply padding directly to ScrollArea. The viewport within ScrollArea will be full width of this padded area. */}
           <ScrollArea className="flex-1 w-full p-4 md:p-6 lg:p-6">
             {children}
           </ScrollArea>
