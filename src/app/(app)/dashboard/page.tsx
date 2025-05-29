@@ -3,8 +3,7 @@
 
 import type { ChartConfig } from "@/components/ui/chart";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-// import { GoalTracker } from "@/components/features/goal-tracker"; // Removed as per request to remove all mock/example data
-import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2 } from "lucide-react";
+import { LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity, Loader2, PlusCircle } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"; 
 import { 
   LineChart as RechartsActualLineChart,
@@ -19,6 +18,8 @@ import {
 import { useState, useEffect } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const chartConfig = {
   income: { label: "Income", color: "hsl(var(--chart-2))" },
@@ -63,7 +64,7 @@ export default function DashboardPage() {
     const fetchData = async () => {
       setIsLoading(true);
       // Simulate API call - in a real app, this would fetch data
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Reduced timeout for faster loading of empty state
 
       // Set to initial (empty) state after "fetch"
       setDashboardData(initialDashboardState); 
@@ -162,29 +163,39 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
               </ChartContainer>
             ) : (
-              <div className="flex justify-center items-center h-[300px] text-muted-foreground">
-                <p>No income or expense data to display.</p>
+              <div className="flex flex-col justify-center items-center h-[300px] text-center text-muted-foreground">
+                <p className="mb-4">No income or expense data to display.</p>
+                <div className="flex gap-2">
+                  <Link href="/income" passHref>
+                    <Button variant="outline">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Income
+                    </Button>
+                  </Link>
+                  <Link href="/expenses" passHref>
+                    <Button variant="outline">
+                      <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
+                    </Button>
+                  </Link>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
         
         <div className="space-y-6">
-          {/* 
-            GoalTrackers were removed as per "remove all mock data" request.
-            Users can add GoalTracker components here if they have specific goals.
-            Example:
-            <GoalTracker goalName="New Equipment" targetAmount={100000} currentAmount={0} />
-            <GoalTracker goalName="Vacation Fund" targetAmount={50000} currentAmount={0} />
-          */}
            <Card className="shadow-lg">
             <CardHeader>
               <CardTitle>Financial Goals</CardTitle>
               <CardDescription>Track your progress towards financial goals.</CardDescription>
             </CardHeader>
             <CardContent className="text-center py-10 text-muted-foreground">
-              <p>No goals being tracked on the dashboard currently.</p>
-              <p className="text-xs">You can add goal trackers here or manage them on the Goals page.</p>
+              <p className="mb-4">No goals being tracked on the dashboard currently.</p>
+              <Link href="/goals" passHref>
+                <Button variant="primary">
+                  <PlusCircle className="mr-2 h-4 w-4" /> Add New Goal
+                </Button>
+              </Link>
+              <p className="text-xs mt-2">You can add goal trackers here or manage them on the Goals page.</p>
             </CardContent>
           </Card>
         </div>
@@ -243,3 +254,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,11 +14,35 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Plus } from "lucide-react";
 
+type QuickAddItemType = "Income" | "Expense" | "Note";
+
 export function QuickAddButton() {
+  const [itemType, setItemType] = useState<QuickAddItemType>("Income");
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSubmit = () => {
+    // TODO: Implement actual save logic
+    console.log("Quick Add:", { type: itemType, amount, description });
+    // Reset form and close dialog
+    setItemType("Income");
+    setAmount("");
+    setDescription("");
+    setIsOpen(false);
+  };
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
           variant="primary"
@@ -40,26 +65,49 @@ export function QuickAddButton() {
             <Label htmlFor="type" className="text-right">
               Type
             </Label>
-            {/* TODO: Replace with Select component */}
-            <Input id="type" defaultValue="Income" className="col-span-3" />
+            <Select value={itemType} onValueChange={(value) => setItemType(value as QuickAddItemType)}>
+              <SelectTrigger className="col-span-3" id="type">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Income">Income</SelectItem>
+                <SelectItem value="Expense">Expense</SelectItem>
+                <SelectItem value="Note">Note</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="amount" className="text-right">
               Amount
             </Label>
-            <Input id="amount" type="number" className="col-span-3" />
+            <Input 
+              id="amount" 
+              type="number" 
+              className="col-span-3" 
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              disabled={itemType === "Note"} // Disable amount for "Note" type
+            />
           </div>
            <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="description" className="text-right">
               Description
             </Label>
-            <Input id="description" className="col-span-3" />
+            <Input 
+              id="description" 
+              className="col-span-3" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button type="submit" variant="primary">Save item</Button>
+          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button type="submit" variant="primary" onClick={handleSubmit}>Save item</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+    
