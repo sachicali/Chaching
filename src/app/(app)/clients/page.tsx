@@ -102,14 +102,9 @@ export default function ClientsPage() {
   }, [clients, selectedClientId]);
 
   useEffect(() => {
-    // If a client is selected but then filtered out by search, deselect it.
     if (selectedClientId && !filteredClients.find(c => c.id === selectedClientId)) {
         setSelectedClientId(null);
     }
-    // If no client is selected AND the list is not empty, select the first one by default (optional behavior)
-    // else if (!selectedClientId && filteredClients.length > 0) {
-    //   setSelectedClientId(filteredClients[0].id);
-    // }
   }, [filteredClients, selectedClientId]);
 
 
@@ -179,7 +174,7 @@ export default function ClientsPage() {
       totalEarningsUSD: editClientTotalEarningsUSD ? parseFloat(editClientTotalEarningsUSD) : undefined,
       paymentMedium: editClientPaymentMedium.trim() || undefined, status: editClientStatus || undefined,
       address: editClientAddress.trim() || undefined, notes: editClientNotes.trim() || undefined,
-      avatarUrl: editingClient.avatarUrl // Preserve existing avatar
+      avatarUrl: editingClient.avatarUrl 
     });
 
     setIsEditClientDialogOpen(false);
@@ -189,7 +184,7 @@ export default function ClientsPage() {
   const handleDeleteClient = (clientId: string) => {
     deleteClientFromContext(clientId);
     if (selectedClientId === clientId) {
-      setSelectedClientId(null); // Deselect if the deleted client was selected
+      setSelectedClientId(null); 
     }
   };
   
@@ -217,12 +212,12 @@ export default function ClientsPage() {
     return "secondary";
   };
 
-
   return (
+    // Page Root
     <div className="flex h-full flex-1">
       {/* Left Pane: Client List */}
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50">
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4"> {/* Header section */}
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
             <Button variant="default" size="sm" onClick={() => setIsAddClientDialogOpen(true)}>New client</Button>
@@ -238,8 +233,8 @@ export default function ClientsPage() {
             />
           </div>
         </div>
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-2">
+        <ScrollArea className="flex-1 min-h-0"> {/* Client List Area */}
+          <div className="p-4 space-y-2"> {/* Inner content wrapper */}
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <button
@@ -254,7 +249,7 @@ export default function ClientsPage() {
                     <AvatarImage src={client.avatarUrl || `https://placehold.co/60x60.png?text=${client.name.charAt(0)}`} alt={client.name} data-ai-hint="avatar user"/>
                     <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <div className="flex-1 min-w-0"> {/* Added min-w-0 for truncation */}
+                  <div className="flex-1 min-w-0"> 
                     <div className="font-semibold text-foreground truncate">{client.name}</div>
                     <div className="text-xs text-muted-foreground truncate">{client.company || "Individual"}</div>
                   </div>
