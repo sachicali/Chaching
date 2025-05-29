@@ -1,8 +1,10 @@
 
+"use client"; // Add this directive
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { GoalTracker } from "@/components/features/goal-tracker";
 import { BarChart, LineChart as LineChartIcon, TrendingUp, TrendingDown, ListChecks, Activity } from "lucide-react"; // Renamed lucide LineChart to avoid conflict
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart"; // Import ChartConfig type
 import { 
   LineChart as RechartsActualLineChart, // Import the actual LineChart component from recharts
   Bar, 
@@ -28,7 +30,7 @@ const incomeExpenseData = [
 const chartConfig = {
   income: { label: "Income", color: "hsl(var(--chart-2))" },
   expenses: { label: "Expenses", color: "hsl(var(--chart-1))" },
-} satisfies import("@/components/ui/chart").ChartConfig;
+} satisfies ChartConfig; // Use imported ChartConfig type
 
 
 export default function DashboardPage() {
