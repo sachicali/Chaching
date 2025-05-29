@@ -193,7 +193,7 @@ export default function DashboardPage() {
               <p className="text-lg font-semibold text-foreground mb-2">Ready to Hit Your Targets?</p>
               <p className="text-muted-foreground mb-4">Define your financial goals and watch your progress.</p>
               <Link href="/goals" passHref>
-                <Button variant="primary" size="lg">
+                <Button variant="outline">
                   <PlusCircle className="mr-2 h-4 w-4" />
                   Set a New Goal
                 </Button>
