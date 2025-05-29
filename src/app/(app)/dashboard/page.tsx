@@ -52,25 +52,8 @@ const initialDashboardState: DashboardState = {
   netSavingsChange: "+0%",
   netProfit: 0,
   netProfitChange: "+0%",
-  incomeExpenseChartData: [
-    // Example structure, will be empty initially
-    // { month: "Jan", income: 0, expenses: 0 },
-    // { month: "Feb", income: 0, expenses: 0 },
-    // { month: "Mar", income: 0, expenses: 0 },
-    // { month: "Apr", income: 0, expenses: 0 },
-    // { month: "May", income: 0, expenses: 0 },
-    // { month: "Jun", income: 0, expenses: 0 },
-    // { month: "Jul", income: 0, expenses: 0 },
-  ],
-  expenseBreakdownData: [
-    // Example structure, will be empty initially
-    // { name: "Rent", value: 0 },
-    // { name: "Utilities", value: 0 },
-    // { name: "Marketing", value: 0 },
-    // { name: "Travel", value: 0 },
-    // { name: "Supplies", value: 0 },
-    // { name: "Other", value: 0 },
-  ],
+  incomeExpenseChartData: [],
+  expenseBreakdownData: [],
 };
 
 export default function DashboardPage() {
@@ -84,16 +67,16 @@ export default function DashboardPage() {
       await new Promise(resolve => setTimeout(resolve, 1000)); 
 
       // In a real app, fetch data here. For now, set to initial (empty) state.
-      // To see the charts with example data structure similar to the image, uncomment below:
+      // Example data for demonstration if needed during development:
       /*
       setDashboardData({
         totalIncome: 12500,
         totalIncomeChange: "+15%",
         totalExpenses: 8200,
         totalExpensesChange: "-10%",
-        netSavings: 4300, // Assuming Savings Gap refers to Net Savings
+        netSavings: 4300, 
         netSavingsChange: "+5%",
-        netProfit: 4300, // Assuming Net Profit is same as Net Savings for this example
+        netProfit: 4300, 
         netProfitChange: "+5%",
         incomeExpenseChartData: [
           { month: "Jan", income: 1800, expenses: 1200 },
@@ -132,7 +115,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-8 w-full">
+    <div className="space-y-6 w-full"> {/* Adjusted from space-y-8 to space-y-6 */}
       <div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground">Dashboard</h1>
         <p className="text-muted-foreground">Welcome back, Emily</p>
@@ -171,7 +154,7 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-muted-foreground">Savings</CardTitle> {/* Renamed from Savings Gap */}
+            <CardTitle className="text-base font-medium text-muted-foreground">Savings</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -205,9 +188,6 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl font-semibold">Income vs. Expenses</CardTitle>
-            {/* Optional: Add total and change here if needed, similar to image */}
-            {/* <div className="text-2xl font-bold">{formatCurrency(dashboardData.totalIncome)}</div> */}
-            {/* <p className={`text-xs ${getChangeColor(dashboardData.totalIncomeChange)}`}>This Year {dashboardData.totalIncomeChange}</p> */}
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -239,9 +219,7 @@ export default function DashboardPage() {
                       wrapperStyle={{ outline: "none" }}
                       contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "var(--radius)" }}
                     />
-                    <RechartsLine type="monotone" dataKey="income" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "hsl(var(--chart-2))", strokeWidth:0 }} />
-                    {/* Expenses line can be added if desired, image implies only one line for income vs expenses trend */}
-                    {/* <RechartsLine type="monotone" dataKey="expenses" strokeWidth={2} dot={false} activeDot={{ r: 4 }} /> */}
+                    <RechartsLine type="monotone" dataKey="income" stroke="var(--color-income)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--color-income)", strokeWidth:0 }} />
                   </RechartsActualLineChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -268,9 +246,6 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-xl font-semibold">Expense Breakdown</CardTitle>
-            {/* Optional: Add total and change here if needed */}
-            {/* <div className="text-2xl font-bold">{formatCurrency(dashboardData.totalExpenses)}</div> */}
-            {/* <p className={`text-xs ${getChangeColor(dashboardData.totalExpensesChange)}`}>This Year {dashboardData.totalExpensesChange}</p> */}
           </CardHeader>
           <CardContent>
              {isLoading ? (
@@ -302,7 +277,7 @@ export default function DashboardPage() {
                         wrapperStyle={{ outline: "none" }}
                         contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "var(--radius)" }}
                       />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="value" fill="var(--color-value)" radius={[4, 4, 0, 0]} />
                   </RechartsActualBarChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -322,3 +297,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
