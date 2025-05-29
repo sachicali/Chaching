@@ -44,7 +44,13 @@ interface Client {
   email: string;
   phone?: string;
   company?: string;
+  monthlyEarnings?: number;
 }
+
+const formatCurrency = (value?: number) => {
+  if (value === undefined || value === null) return "-";
+  return `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 export default function ClientsPage() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -57,12 +63,15 @@ export default function ClientsPage() {
   const [newClientEmail, setNewClientEmail] = useState("");
   const [newClientPhone, setNewClientPhone] = useState("");
   const [newClientCompany, setNewClientCompany] = useState("");
+  const [newClientMonthlyEarnings, setNewClientMonthlyEarnings] = useState<string>("");
+
 
   // Form state for editing an existing client
   const [editClientName, setEditClientName] = useState("");
   const [editClientEmail, setEditClientEmail] = useState("");
   const [editClientPhone, setEditClientPhone] = useState("");
   const [editClientCompany, setEditClientCompany] = useState("");
+  const [editClientMonthlyEarnings, setEditClientMonthlyEarnings] = useState<string>("");
 
 
   const { toast } = useToast();
@@ -72,6 +81,7 @@ export default function ClientsPage() {
     setNewClientEmail("");
     setNewClientPhone("");
     setNewClientCompany("");
+    setNewClientMonthlyEarnings("");
   };
 
   const handleAddClient = () => {
@@ -91,6 +101,16 @@ export default function ClientsPage() {
         });
         return;
     }
+    const earnings = newClientMonthlyEarnings ? parseFloat(newClientMonthlyEarnings) : undefined;
+    if (newClientMonthlyEarnings && (isNaN(earnings!) || earnings! < 0)) {
+        toast({
+            title: "Invalid Earnings",
+            description: "Monthly Earnings must be a valid positive number.",
+            variant: "destructive",
+        });
+        return;
+    }
+
 
     const newClient: Client = {
       id: Date.now().toString(), 
@@ -98,6 +118,7 @@ export default function ClientsPage() {
       email: newClientEmail.trim(),
       phone: newClientPhone.trim() || undefined,
       company: newClientCompany.trim() || undefined,
+      monthlyEarnings: earnings,
     };
     setClients((prevClients) => [...prevClients, newClient]);
     toast({
@@ -115,6 +136,7 @@ export default function ClientsPage() {
     setEditClientEmail(client.email);
     setEditClientPhone(client.phone || "");
     setEditClientCompany(client.company || "");
+    setEditClientMonthlyEarnings(client.monthlyEarnings?.toString() || "");
     setIsEditClientDialogOpen(true);
   };
 
@@ -137,6 +159,15 @@ export default function ClientsPage() {
       });
       return;
     }
+    const earnings = editClientMonthlyEarnings ? parseFloat(editClientMonthlyEarnings) : undefined;
+     if (editClientMonthlyEarnings && (isNaN(earnings!) || earnings! < 0)) {
+        toast({
+            title: "Invalid Earnings",
+            description: "Monthly Earnings must be a valid positive number.",
+            variant: "destructive",
+        });
+        return;
+    }
 
     setClients(clients.map(client =>
       client.id === editingClient.id
@@ -146,6 +177,7 @@ export default function ClientsPage() {
             email: editClientEmail.trim(),
             phone: editClientPhone.trim() || undefined,
             company: editClientCompany.trim() || undefined,
+            monthlyEarnings: earnings,
           }
         : client
     ));
@@ -243,6 +275,20 @@ export default function ClientsPage() {
                   placeholder="e.g. Acme Corp (Optional)"
                 />
               </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="add-monthly-earnings" className="text-right">
+                  Monthly Earnings
+                </Label>
+                <Input
+                  id="add-monthly-earnings"
+                  type="number"
+                  value={newClientMonthlyEarnings}
+                  onChange={(e) => setNewClientMonthlyEarnings(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. 5000 (Optional)"
+                  min="0"
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => {
@@ -316,6 +362,20 @@ export default function ClientsPage() {
                 className="col-span-3"
               />
             </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-monthly-earnings" className="text-right">
+                  Monthly Earnings
+                </Label>
+                <Input
+                  id="edit-monthly-earnings"
+                  type="number"
+                  value={editClientMonthlyEarnings}
+                  onChange={(e) => setEditClientMonthlyEarnings(e.target.value)}
+                  className="col-span-3"
+                  placeholder="e.g. 5000 (Optional)"
+                  min="0"
+                />
+              </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => {
@@ -346,6 +406,7 @@ export default function ClientsPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Company</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Monthly Earnings</TableHead>
                   <TableHead className="text-right w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -356,6 +417,7 @@ export default function ClientsPage() {
                     <TableCell>{client.email}</TableCell>
                     <TableCell>{client.company || "-"}</TableCell>
                     <TableCell>{client.phone || "-"}</TableCell>
+                    <TableCell>{formatCurrency(client.monthlyEarnings)}</TableCell>
                     <TableCell className="text-right">
                        <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -398,3 +460,5 @@ export default function ClientsPage() {
     </div>
   );
 }
+
+    
