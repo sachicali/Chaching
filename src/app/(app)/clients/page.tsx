@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PlusCircle, Users, MoreHorizontal, Edit } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit, DollarSign } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -67,6 +67,10 @@ export default function ClientsPage() {
 
 
   const { toast } = useToast();
+
+  const totalClientEarnings = useMemo(() => {
+    return clients.reduce((sum, client) => sum + (client.monthlyEarnings || 0), 0);
+  }, [clients]);
 
   const resetAddClientForm = () => {
     setNewClientName("");
@@ -272,6 +276,30 @@ export default function ClientsPage() {
         </Dialog>
       </div>
 
+      {/* Total Projected Monthly Earnings Card */}
+      <Card className="shadow-lg">
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <DollarSign className="mr-2 h-5 w-5 text-primary" />
+            Total Projected Monthly Earnings
+          </CardTitle>
+          <CardDescription>
+            Estimated total monthly income based on all clients' monthly earnings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="text-3xl font-bold text-positive">
+            {formatCurrency(totalClientEarnings)}
+          </div>
+          {clients.length === 0 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Add clients with monthly earnings to see a projection here.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+
       {/* Edit Client Dialog */}
       <Dialog open={isEditClientDialogOpen} onOpenChange={(isOpen) => {
           setIsEditClientDialogOpen(isOpen);
@@ -431,3 +459,6 @@ export default function ClientsPage() {
     </div>
   );
 }
+
+
+    
