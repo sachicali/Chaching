@@ -24,8 +24,8 @@ export default function AppLayout({
             </SidebarTrigger>
             <h1 className="text-lg font-semibold text-primary">Chaching</h1>
           </header>
-          <ScrollArea className="flex-1">
-            <main className="p-4 md:p-6 lg:p-8">
+          <ScrollArea className="flex-1 w-full"> {/* Ensured w-full */}
+            <main className="w-full p-4 md:p-6 lg:p-8"> {/* Ensured w-full */}
               {children}
             </main>
           </ScrollArea>
