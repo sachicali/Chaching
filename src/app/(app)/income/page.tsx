@@ -6,17 +6,29 @@ import { TrendingUp, Users } from "lucide-react";
 import { useClients } from "@/contexts/ClientContext";
 import { useMemo } from "react";
 
-const formatCurrency = (value?: number) => {
+const EXCHANGE_RATE_USD_TO_PHP = 58.75; // Example rate, fetch from API in a real app
+
+const formatUSD = (value?: number) => {
+  if (value === undefined || value === null) return "$0.00";
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+};
+
+const formatPHP = (value?: number) => {
   if (value === undefined || value === null) return "₱0.00";
-  return `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
 };
 
 export default function IncomePage() {
   const { clients } = useClients();
 
-  const totalClientEarnings = useMemo(() => {
+  const totalClientEarningsUSD = useMemo(() => {
     return clients.reduce((sum, client) => sum + (client.monthlyEarnings || 0), 0);
   }, [clients]);
+
+  const totalClientEarningsPHP = useMemo(() => {
+    return totalClientEarningsUSD * EXCHANGE_RATE_USD_TO_PHP;
+  }, [totalClientEarningsUSD]);
+
 
   return (
     <div className="space-y-6">
@@ -28,11 +40,14 @@ export default function IncomePage() {
             <Users className="mr-2 h-5 w-5 text-primary" />
             Projected Monthly Client Earnings
           </CardTitle>
-          <CardDescription>Total estimated monthly income from all your clients.</CardDescription>
+          <CardDescription>Total estimated monthly income (USD and PHP) from all your clients.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-positive">
-            {formatCurrency(totalClientEarnings)}
+            {formatUSD(totalClientEarningsUSD)}
+          </div>
+           <div className="text-xl font-medium text-muted-foreground mt-1">
+            (approx. {formatPHP(totalClientEarningsPHP)})
           </div>
            {clients.length === 0 && (
             <p className="text-sm text-muted-foreground mt-2">

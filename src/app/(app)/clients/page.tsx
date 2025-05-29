@@ -39,9 +39,16 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useClients, type Client } from "@/contexts/ClientContext";
 
-const formatCurrency = (value?: number) => {
+const EXCHANGE_RATE_USD_TO_PHP = 58.75; // Example rate, fetch from API in a real app
+
+const formatUSD = (value?: number) => {
   if (value === undefined || value === null) return "-";
-  return `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+};
+
+const formatPHP = (value?: number) => {
+  if (value === undefined || value === null) return "-";
+  return new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(value);
 };
 
 export default function ClientsPage() {
@@ -68,9 +75,13 @@ export default function ClientsPage() {
 
   const { toast } = useToast();
 
-  const totalClientEarnings = useMemo(() => {
+  const totalClientEarningsUSD = useMemo(() => {
     return clients.reduce((sum, client) => sum + (client.monthlyEarnings || 0), 0);
   }, [clients]);
+
+  const totalClientEarningsPHP = useMemo(() => {
+    return totalClientEarningsUSD * EXCHANGE_RATE_USD_TO_PHP;
+  }, [totalClientEarningsUSD]);
 
   const resetAddClientForm = () => {
     setNewClientName("");
@@ -101,7 +112,7 @@ export default function ClientsPage() {
     if (newClientMonthlyEarnings && (isNaN(earnings!) || earnings! < 0)) {
         toast({
             title: "Invalid Earnings",
-            description: "Monthly Earnings must be a valid positive number.",
+            description: "Monthly Earnings (USD) must be a valid positive number.",
             variant: "destructive",
         });
         return;
@@ -152,7 +163,7 @@ export default function ClientsPage() {
      if (editClientMonthlyEarnings && (isNaN(earnings!) || earnings! < 0)) {
         toast({
             title: "Invalid Earnings",
-            description: "Monthly Earnings must be a valid positive number.",
+            description: "Monthly Earnings (USD) must be a valid positive number.",
             variant: "destructive",
         });
         return;
@@ -252,7 +263,7 @@ export default function ClientsPage() {
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="add-monthly-earnings" className="text-right">
-                  Monthly Earnings
+                  Monthly Earnings (USD)
                 </Label>
                 <Input
                   id="add-monthly-earnings"
@@ -284,12 +295,15 @@ export default function ClientsPage() {
             Total Projected Monthly Earnings
           </CardTitle>
           <CardDescription>
-            Estimated total monthly income based on all clients' monthly earnings.
+            Estimated total monthly income (USD and PHP) based on all clients.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold text-positive">
-            {formatCurrency(totalClientEarnings)}
+            {formatUSD(totalClientEarningsUSD)}
+          </div>
+          <div className="text-xl font-medium text-muted-foreground mt-1">
+            (approx. {formatPHP(totalClientEarningsPHP)})
           </div>
           {clients.length === 0 && (
             <p className="text-sm text-muted-foreground mt-2">
@@ -363,7 +377,7 @@ export default function ClientsPage() {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="edit-monthly-earnings" className="text-right">
-                  Monthly Earnings
+                  Monthly Earnings (USD)
                 </Label>
                 <Input
                   id="edit-monthly-earnings"
@@ -405,7 +419,8 @@ export default function ClientsPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Company</TableHead>
                   <TableHead>Phone</TableHead>
-                  <TableHead>Monthly Earnings</TableHead>
+                  <TableHead>Monthly Earnings (USD)</TableHead>
+                  <TableHead>Monthly Earnings (PHP)</TableHead>
                   <TableHead className="text-right w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -416,7 +431,8 @@ export default function ClientsPage() {
                     <TableCell>{client.email}</TableCell>
                     <TableCell>{client.company || "-"}</TableCell>
                     <TableCell>{client.phone || "-"}</TableCell>
-                    <TableCell>{formatCurrency(client.monthlyEarnings)}</TableCell>
+                    <TableCell>{formatUSD(client.monthlyEarnings)}</TableCell>
+                    <TableCell>{formatPHP(client.monthlyEarnings ? client.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP : undefined)}</TableCell>
                     <TableCell className="text-right">
                        <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -459,6 +475,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-
-    
