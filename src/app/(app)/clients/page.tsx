@@ -252,7 +252,7 @@ export default function ClientsPage() {
 
   return (
     <div className="flex h-screen"> {/* Root of ClientsPage */}
-      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full rounded-lg">
+      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card h-full rounded-lg">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
@@ -538,4 +538,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-

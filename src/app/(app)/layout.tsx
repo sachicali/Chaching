@@ -16,7 +16,7 @@ export default function AppLayout({
       <SidebarProvider defaultOpen>
         <div className="flex flex-1 min-h-0"> {/* Ensures this container grows and respects flex parent */}
           <AppSidebar />
-          <SidebarInset className="flex flex-col flex-1 w-full rounded-lg">
+          <SidebarInset className="flex flex-col flex-1 w-full rounded-lg overflow-hidden">
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden">
               <SidebarTrigger asChild>
                  <Button variant="outline" size="icon" className="md:hidden">
@@ -25,7 +25,7 @@ export default function AppLayout({
               </SidebarTrigger>
               <h1 className="text-lg font-semibold text-primary">Chaching</h1>
             </header>
-            <ScrollArea className="flex-1 w-full lg:p-6 p-4 min-h-0"> {/* Added min-h-0 */}
+            <ScrollArea className="flex-1 w-full lg:p-6 p-4 min-h-0 rounded-lg"> {/* Added min-h-0 */}
               {children}
             </ScrollArea>
           </SidebarInset>
