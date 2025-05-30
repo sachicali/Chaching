@@ -55,7 +55,7 @@ const formatPHP = (value?: number) => {
 const clientStatusOptions = ["Active", "On Roster", "Prospect", "Former Client", "On Hold", "Inactive", "Payment Pending"];
 
 export default function ClientsPage() {
-  const { clients, addClient, updateClient, deleteClient: deleteClientFromContext } = useClients();
+  const { clients, addClient, updateClient, deleteClient: deleteClientFromContext, getClientById } = useClients();
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -103,12 +103,13 @@ export default function ClientsPage() {
 
   const selectedClient = useMemo(() => {
     if (!selectedClientId) return null;
-    return clients.find(client => client.id === selectedClientId);
-  }, [clients, selectedClientId]);
+    return getClientById(selectedClientId);
+  }, [getClientById, selectedClientId]);
 
   useEffect(() => {
     if (selectedClientId && !filteredClients.find(c => c.id === selectedClientId)) {
-        setSelectedClientId(null);
+        // If search term hides the selected client, keep it selected but it won't be in the list
+        // Or, clear selection: setSelectedClientId(null);
     }
   }, [filteredClients, selectedClientId]);
 
@@ -250,8 +251,78 @@ export default function ClientsPage() {
     }
   };
 
+  const AllClientsTable = ({ clientsToDisplay, onRowClick }: { clientsToDisplay: Client[], onRowClick: (clientId: string) => void}) => (
+    <Card className="flex flex-col">
+      <CardHeader>
+        <CardTitle className="flex items-center text-2xl">
+          <Users2 className="mr-3 h-6 w-6 text-primary" />
+          {selectedClient ? "All Clients Overview" : "Client Overview"}
+        </CardTitle>
+        <CardDescription>
+          {selectedClient ? "Summary of all clients in the system." : "Select a client from the list on the left to view their details, or browse all clients below."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Client</TableHead>
+              <TableHead>Company</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Monthly (USD)</TableHead>
+              <TableHead>Monthly (PHP)</TableHead>
+              <TableHead>Total (USD)</TableHead>
+              <TableHead>Total (PHP)</TableHead>
+              <TableHead>Payment Via</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {clientsToDisplay.map((client) => (
+              <TableRow key={client.id} onClick={() => onRowClick(client.id)} className="cursor-pointer hover:bg-muted">
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={client.avatarUrl} alt={client.name} data-ai-hint="avatar person" />
+                      <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium text-foreground">{client.name}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-muted-foreground">{client.company || "N/A"}</TableCell>
+                <TableCell className="text-muted-foreground">{client.email}</TableCell>
+                <TableCell>
+                  {client.status && <Badge variant={getStatusBadgeVariant(client.status)}>{client.status}</Badge>}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {client.monthlyEarnings ? formatUSD(client.monthlyEarnings) : "-"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {client.monthlyEarnings ? formatPHP(client.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "-"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {client.totalEarningsUSD ? formatUSD(client.totalEarningsUSD) : "-"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {client.totalEarningsUSD ? formatPHP(client.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "-"}
+                </TableCell>
+                <TableCell className="text-muted-foreground">{client.paymentMedium || "N/A"}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {clientsToDisplay.length === 0 && (
+          <div className="text-center py-10 text-muted-foreground">
+            <p>No clients to display in the overview.</p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+
+
   return (
-    <div className="flex h-screen"> {/* Root of ClientsPage */}
+    <div className="flex h-screen">
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card h-full rounded-lg">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
@@ -269,8 +340,8 @@ export default function ClientsPage() {
             />
           </div>
         </div>
-        <ScrollArea className="flex-1 min-h-0 overflow-y-auto"> {/* ScrollArea for client list */}
-          <div className="p-4 space-y-2 h-full flex flex-col"> {/* Inner container for items or placeholder */}
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto">
+          <div className="p-4 space-y-2 h-full flex flex-col">
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <div
@@ -320,166 +391,114 @@ export default function ClientsPage() {
         </ScrollArea>
       </div>
 
-      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto h-full"> {/* Right pane */}
+      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto h-full">
         {selectedClient ? (
-          <div className="space-y-6 flex-1 flex flex-col">
-            <div className="flex justify-between items-start">
-                <div>
-                    <h2 className="text-3xl font-bold text-foreground">{selectedClient.name}</h2>
-                    <p className="text-md text-muted-foreground flex items-center">
-                        <BriefcaseBusiness className="mr-2 h-4 w-4" /> {selectedClient.company || "Individual"}
-                    </p>
-                </div>
-                {selectedClient.status && (
-                    <Badge variant={getStatusBadgeVariant(selectedClient.status)} className="text-sm px-3 py-1">
-                        {selectedClient.status}
-                    </Badge>
-                )}
+          <>
+            <div className="space-y-6 flex flex-col"> {/* Selected client details */}
+              <div className="flex justify-between items-start">
+                  <div>
+                      <h2 className="text-3xl font-bold text-foreground">{selectedClient.name}</h2>
+                      <p className="text-md text-muted-foreground flex items-center">
+                          <BriefcaseBusiness className="mr-2 h-4 w-4" /> {selectedClient.company || "Individual"}
+                      </p>
+                  </div>
+                  {selectedClient.status && (
+                      <Badge variant={getStatusBadgeVariant(selectedClient.status)} className="text-sm px-3 py-1">
+                          {selectedClient.status}
+                      </Badge>
+                  )}
+              </div>
+              <Separator />
+              <Tabs defaultValue="overview" className="w-full flex flex-col">
+                <TabsList className="bg-transparent p-0 border-b border-border rounded-none justify-start">
+                  <TabsTrigger value="overview" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Overview</TabsTrigger>
+                  <TabsTrigger value="financials" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Financials</TabsTrigger>
+                  <TabsTrigger value="invoices" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Invoices</TabsTrigger>
+                  <TabsTrigger value="activity" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Activity</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="overview" className="mt-6 space-y-6">
+                   <Card className="border-none shadow-none bg-transparent">
+                      <CardHeader className="px-0 pt-0">
+                          <CardTitle className="text-xl font-semibold text-foreground flex items-center"><Contact className="mr-3 h-5 w-5 text-primary/70"/>Client Details</CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-0">
+                          <ClientDetailItem label="Email" value={selectedClient.email} icon={Mail} />
+                          <ClientDetailItem label="Phone" value={selectedClient.phone} icon={Phone} />
+                          <ClientDetailItem label="Address" value={selectedClient.address} icon={MapPin} />
+                          <ClientDetailItem label="Notes" value={selectedClient.notes} icon={FileTextIcon} />
+                      </CardContent>
+                   </Card>
+                </TabsContent>
+
+                <TabsContent value="financials" className="mt-6 space-y-6">
+                   <Card className="border-none shadow-none bg-transparent">
+                      <CardHeader className="px-0 pt-0">
+                           <CardTitle className="text-xl font-semibold text-foreground flex items-center"><DollarSign className="mr-3 h-5 w-5 text-primary/70"/>Financial Summary</CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-0">
+                          <ClientDetailItem label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
+                          <ClientDetailItem label="Monthly Earnings (PHP)" value={selectedClient.monthlyEarnings ? formatPHP(selectedClient.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
+                          <ClientDetailItem label="Total Earnings (USD)" value={selectedClient.totalEarningsUSD ? formatUSD(selectedClient.totalEarningsUSD) : "Not set"} icon={DollarSign} />
+                          <ClientDetailItem label="Total Earnings (PHP)" value={selectedClient.totalEarningsUSD ? formatPHP(selectedClient.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
+                          <ClientDetailItem label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
+                      </CardContent>
+                   </Card>
+                </TabsContent>
+
+                <TabsContent value="invoices" className="mt-6 space-y-6">
+                  <Card className="border-none shadow-none bg-transparent">
+                      <CardHeader className="px-0 pt-0">
+                          <CardTitle className="text-xl font-semibold text-foreground flex items-center"><FileTextIcon className="mr-3 h-5 w-5 text-primary/70"/>Invoices</CardTitle>
+                      </CardHeader>
+                      <CardContent className="px-0">
+                      <Table>
+                          <TableHeader>
+                          <TableRow>
+                              <TableHead>Invoice #</TableHead>
+                              <TableHead>Date</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead className="text-right">Amount</TableHead>
+                          </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                          <TableRow>
+                              <TableCell>INV-2023-001</TableCell>
+                              <TableCell>2023-01-15</TableCell>
+                              <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Paid")}>Paid</Badge></TableCell>
+                              <TableCell className="text-right">{formatUSD(1500)}</TableCell>
+                          </TableRow>
+                           <TableRow>
+                              <TableCell>INV-2023-002</TableCell>
+                              <TableCell>2023-02-20</TableCell>
+                              <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Sent")}>Sent</Badge></TableCell>
+                              <TableCell className="text-right">{formatUSD(2000)}</TableCell>
+                          </TableRow>
+                           <TableRow>
+                              <TableCell>INV-2023-003</TableCell>
+                              <TableCell>2023-03-25</TableCell>
+                              <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Draft")}>Draft</Badge></TableCell>
+                              <TableCell className="text-right">{formatUSD(2500)}</TableCell>
+                          </TableRow>
+                          </TableBody>
+                      </Table>
+                      </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="activity" className="mt-6 space-y-6">
+                   <div className="rounded-lg border border-border p-6 text-center text-muted-foreground h-48 flex items-center justify-center">
+                      Client activity log will be displayed here. (Coming soon)
+                  </div>
+                </TabsContent>
+              </Tabs>
             </div>
-            <Separator />
-            <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col">
-              <TabsList className="bg-transparent p-0 border-b border-border rounded-none justify-start">
-                <TabsTrigger value="overview" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Overview</TabsTrigger>
-                <TabsTrigger value="financials" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Financials</TabsTrigger>
-                <TabsTrigger value="invoices" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Invoices</TabsTrigger>
-                <TabsTrigger value="activity" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Activity</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overview" className="mt-6 flex-1">
-                 <Card className="border-none shadow-none bg-transparent">
-                    <CardHeader className="px-0 pt-0">
-                        <CardTitle className="text-xl font-semibold text-foreground flex items-center"><Contact className="mr-3 h-5 w-5 text-primary/70"/>Client Details</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-0">
-                        <ClientDetailItem label="Email" value={selectedClient.email} icon={Mail} />
-                        <ClientDetailItem label="Phone" value={selectedClient.phone} icon={Phone} />
-                        <ClientDetailItem label="Address" value={selectedClient.address} icon={MapPin} />
-                        <ClientDetailItem label="Notes" value={selectedClient.notes} icon={FileTextIcon} />
-                    </CardContent>
-                 </Card>
-              </TabsContent>
-
-              <TabsContent value="financials" className="mt-6 flex-1">
-                 <Card className="border-none shadow-none bg-transparent">
-                    <CardHeader className="px-0 pt-0">
-                         <CardTitle className="text-xl font-semibold text-foreground flex items-center"><DollarSign className="mr-3 h-5 w-5 text-primary/70"/>Financial Summary</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-0">
-                        <ClientDetailItem label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
-                        <ClientDetailItem label="Monthly Earnings (PHP)" value={selectedClient.monthlyEarnings ? formatPHP(selectedClient.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
-                        <ClientDetailItem label="Total Earnings (USD)" value={selectedClient.totalEarningsUSD ? formatUSD(selectedClient.totalEarningsUSD) : "Not set"} icon={DollarSign} />
-                        <ClientDetailItem label="Total Earnings (PHP)" value={selectedClient.totalEarningsUSD ? formatPHP(selectedClient.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
-                        <ClientDetailItem label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
-                    </CardContent>
-                 </Card>
-              </TabsContent>
-
-              <TabsContent value="invoices" className="mt-6 flex-1">
-                <Card className="border-none shadow-none bg-transparent">
-                    <CardHeader className="px-0 pt-0">
-                        <CardTitle className="text-xl font-semibold text-foreground flex items-center"><FileTextIcon className="mr-3 h-5 w-5 text-primary/70"/>Invoices</CardTitle>
-                    </CardHeader>
-                    <CardContent className="px-0">
-                    <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead>Invoice #</TableHead>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        <TableRow>
-                            <TableCell>INV-2023-001</TableCell>
-                            <TableCell>2023-01-15</TableCell>
-                            <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Paid")}>Paid</Badge></TableCell>
-                            <TableCell className="text-right">{formatUSD(1500)}</TableCell>
-                        </TableRow>
-                         <TableRow>
-                            <TableCell>INV-2023-002</TableCell>
-                            <TableCell>2023-02-20</TableCell>
-                            <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Sent")}>Sent</Badge></TableCell>
-                            <TableCell className="text-right">{formatUSD(2000)}</TableCell>
-                        </TableRow>
-                         <TableRow>
-                            <TableCell>INV-2023-003</TableCell>
-                            <TableCell>2023-03-25</TableCell>
-                            <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Draft")}>Draft</Badge></TableCell>
-                            <TableCell className="text-right">{formatUSD(2500)}</TableCell>
-                        </TableRow>
-                        </TableBody>
-                    </Table>
-                    </CardContent>
-                </Card>
-              </TabsContent>
-              <TabsContent value="activity" className="mt-6 flex-1">
-                 <div className="rounded-lg border border-border p-6 text-center text-muted-foreground h-48 flex items-center justify-center">
-                    Client activity log will be displayed here. (Coming soon)
-                </div>
-              </TabsContent>
-            </Tabs>
-          </div>
+            
+            <div className="mt-8"> {/* All clients overview table */}
+              <AllClientsTable clientsToDisplay={clients} onRowClick={handleClientSelect} />
+            </div>
+          </>
         ) : filteredClients.length > 0 ? (
-            <Card className="flex-1 flex flex-col">
-                <CardHeader>
-                    <CardTitle className="flex items-center text-2xl">
-                        <Users2 className="mr-3 h-6 w-6 text-primary" /> 
-                        Client Overview
-                    </CardTitle>
-                    <CardDescription>Select a client from the list on the left to view their details, or browse all clients below.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Client</TableHead>
-                                <TableHead>Company</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Status</TableHead>
-                                <TableHead>Monthly (USD)</TableHead>
-                                <TableHead>Monthly (PHP)</TableHead>
-                                <TableHead>Total (USD)</TableHead>
-                                <TableHead>Total (PHP)</TableHead>
-                                <TableHead>Payment Via</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {filteredClients.map((client) => (
-                                <TableRow key={client.id} onClick={() => handleClientSelect(client.id)} className="cursor-pointer hover:bg-muted">
-                                    <TableCell>
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-8 w-8">
-                                                <AvatarImage src={client.avatarUrl} alt={client.name} data-ai-hint="avatar person"/>
-                                                <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
-                                            </Avatar>
-                                            <span className="font-medium text-foreground">{client.name}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">{client.company || "N/A"}</TableCell>
-                                    <TableCell className="text-muted-foreground">{client.email}</TableCell>
-                                    <TableCell>
-                                        {client.status && <Badge variant={getStatusBadgeVariant(client.status)}>{client.status}</Badge>}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">
-                                        {client.monthlyEarnings ? formatUSD(client.monthlyEarnings) : "-"}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">
-                                        {client.monthlyEarnings ? formatPHP(client.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "-"}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">
-                                        {client.totalEarningsUSD ? formatUSD(client.totalEarningsUSD) : "-"}
-                                    </TableCell>
-                                     <TableCell className="text-muted-foreground">
-                                        {client.totalEarningsUSD ? formatPHP(client.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "-"}
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground">{client.paymentMedium || "N/A"}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+           <AllClientsTable clientsToDisplay={filteredClients} onRowClick={handleClientSelect} />
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-muted-foreground flex-1">
             <PackageSearch className="h-16 w-16 mb-4 text-primary/30" />
@@ -538,3 +557,4 @@ export default function ClientsPage() {
     </div>
   );
 }
+
