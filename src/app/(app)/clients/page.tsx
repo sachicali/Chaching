@@ -251,8 +251,8 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="flex flex-1 min-h-0"> {/* Root of ClientsPage: flex-1 to take height from parent ScrollArea */}
-      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full">
+    <div className="flex flex-1 min-h-0"> {/* Root of ClientsPage */}
+      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
@@ -269,8 +269,8 @@ export default function ClientsPage() {
             />
           </div>
         </div>
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="p-4 space-y-2 h-full flex flex-col">
+        <ScrollArea className="flex-1 min-h-0"> {/* ScrollArea for client list */}
+          <div className="p-4 space-y-2 h-full flex flex-col"> {/* Inner container for items or placeholder */}
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <div
@@ -320,7 +320,7 @@ export default function ClientsPage() {
         </ScrollArea>
       </div>
 
-      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto h-full">
+      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto"> {/* Right pane */}
         {selectedClient ? (
           <div className="space-y-6 flex-1 flex flex-col">
             <div className="flex justify-between items-start">
@@ -538,6 +538,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
-
-    
