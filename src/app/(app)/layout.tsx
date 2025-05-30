@@ -16,7 +16,7 @@ export default function AppLayout({
       <SidebarProvider defaultOpen>
         <div className="flex flex-1 min-h-0"> {/* Ensures this container grows and respects flex parent */}
           <AppSidebar />
-          <SidebarInset className="flex flex-col flex-1 w-full">
+          <SidebarInset className="flex flex-col flex-1 w-full rounded-lg">
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background/80 backdrop-blur-sm px-4 md:hidden">
               <SidebarTrigger asChild>
                  <Button variant="outline" size="icon" className="md:hidden">
