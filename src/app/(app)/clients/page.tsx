@@ -2,8 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { useState, useMemo, useEffect }
-from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -225,7 +224,7 @@ export default function ClientsPage() {
   const getInvoiceStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
     if (!status) return "secondary";
     const lowerStatus = status.toLowerCase();
-    if (lowerStatus === "paid") return "default"; // Typically success/green, using primary/default for now
+    if (lowerStatus === "paid") return "default"; 
     if (lowerStatus === "sent") return "outline";
     if (lowerStatus === "draft") return "secondary";
     return "secondary";
@@ -251,9 +250,8 @@ export default function ClientsPage() {
     }
   };
 
-
   return (
-    <div className="flex h-full min-h-0">
+    <div className="flex flex-1 min-h-0"> {/* Root of ClientsPage: flex-1 to take height from parent ScrollArea */}
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
@@ -322,7 +320,7 @@ export default function ClientsPage() {
         </ScrollArea>
       </div>
 
-      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto">
+      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto h-full">
         {selectedClient ? (
           <div className="space-y-6 flex-1 flex flex-col">
             <div className="flex justify-between items-start">
@@ -350,7 +348,7 @@ export default function ClientsPage() {
               <TabsContent value="overview" className="mt-6 flex-1">
                  <Card className="border-none shadow-none bg-transparent">
                     <CardHeader className="px-0 pt-0">
-                        <CardTitle className="text-xl font-semibold text-foreground">Client details</CardTitle>
+                        <CardTitle className="text-xl font-semibold text-foreground flex items-center"><Contact className="mr-3 h-5 w-5 text-primary/70"/>Client Details</CardTitle>
                     </CardHeader>
                     <CardContent className="px-0">
                         <ClientDetailItem label="Email" value={selectedClient.email} icon={Mail} />
@@ -364,7 +362,7 @@ export default function ClientsPage() {
               <TabsContent value="financials" className="mt-6 flex-1">
                  <Card className="border-none shadow-none bg-transparent">
                     <CardHeader className="px-0 pt-0">
-                        <CardTitle className="text-xl font-semibold text-foreground">Financial Summary</CardTitle>
+                         <CardTitle className="text-xl font-semibold text-foreground flex items-center"><DollarSign className="mr-3 h-5 w-5 text-primary/70"/>Financial Summary</CardTitle>
                     </CardHeader>
                     <CardContent className="px-0">
                         <ClientDetailItem label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
@@ -379,7 +377,7 @@ export default function ClientsPage() {
               <TabsContent value="invoices" className="mt-6 flex-1">
                 <Card className="border-none shadow-none bg-transparent">
                     <CardHeader className="px-0 pt-0">
-                        <CardTitle className="text-xl font-semibold text-foreground">Invoices</CardTitle>
+                        <CardTitle className="text-xl font-semibold text-foreground flex items-center"><FileTextIcon className="mr-3 h-5 w-5 text-primary/70"/>Invoices</CardTitle>
                     </CardHeader>
                     <CardContent className="px-0">
                     <Table>
@@ -410,12 +408,6 @@ export default function ClientsPage() {
                             <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Draft")}>Draft</Badge></TableCell>
                             <TableCell className="text-right">{formatUSD(2500)}</TableCell>
                         </TableRow>
-                        {/* Placeholder if no actual invoices */}
-                        {/* <TableRow> 
-                            <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
-                            No invoices to display for this client yet.
-                            </TableCell>
-                        </TableRow> */}
                         </TableBody>
                     </Table>
                     </CardContent>
@@ -546,3 +538,6 @@ export default function ClientsPage() {
     </div>
   );
 }
+
+
+    
