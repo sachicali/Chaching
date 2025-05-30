@@ -251,7 +251,7 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="flex flex-1 min-h-0"> {/* Root of ClientsPage */}
+    <div className="flex h-full"> {/* Root of ClientsPage */}
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
@@ -320,7 +320,7 @@ export default function ClientsPage() {
         </ScrollArea>
       </div>
 
-      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto"> {/* Right pane */}
+      <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto h-full"> {/* Right pane */}
         {selectedClient ? (
           <div className="space-y-6 flex-1 flex flex-col">
             <div className="flex justify-between items-start">
@@ -538,3 +538,4 @@ export default function ClientsPage() {
     </div>
   );
 }
+
