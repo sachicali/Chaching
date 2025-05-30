@@ -1,3 +1,4 @@
+"use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Settings, Globe, UploadCloud, Link2, BadgePercent, Palette, FileOutput } from "lucide-react";
