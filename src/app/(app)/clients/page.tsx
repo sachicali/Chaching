@@ -516,7 +516,7 @@ export default function ClientsPage() {
 
       <Dialog open={isEditClientDialogOpen} onOpenChange={(isOpen) => { setIsEditClientDialogOpen(isOpen); if (!isOpen) setEditingClient(null); }}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Edit Client: {editingClient?.name}</DialogTitle><DialogDescription>Update client details.</DialogDescription></DialogHeader>
+          <DialogHeader><DialogTitle>Edit Client: {editingClient?.name}</DialogTitle><DialogDescription>Update client details.</DialogDescription></DialogHeader> 
           <ScrollArea className="max-h-[70vh] p-1">
             <div className="grid gap-4 py-4 pr-4">
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-name" className="text-right">Name*</Label><Input id="edit-name" value={editClientName} onChange={(e) => setEditClientName(e.target.value)} className="col-span-3"/></div>
