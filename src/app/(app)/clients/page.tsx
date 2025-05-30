@@ -251,8 +251,8 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="flex h-full"> {/* Root of ClientsPage */}
-      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50">
+    <div className="flex h-screen"> {/* Root of ClientsPage */}
+      <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full">
         <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
@@ -269,7 +269,7 @@ export default function ClientsPage() {
             />
           </div>
         </div>
-        <ScrollArea className="flex-1 min-h-0"> {/* ScrollArea for client list */}
+        <ScrollArea className="flex-1 min-h-0 overflow-y-auto"> {/* ScrollArea for client list */}
           <div className="p-4 space-y-2 h-full flex flex-col"> {/* Inner container for items or placeholder */}
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
