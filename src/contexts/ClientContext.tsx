@@ -11,18 +11,18 @@ export interface Client {
   email: string;
   phone?: string;
   company?: string;
-  monthlyEarnings?: number;
+  monthlyEarnings?: number; // Assumed to be in USD
   totalEarningsUSD?: number;
   paymentMedium?: string;
   status?: string;
   address?: string;
-  notes?: string; // Added notes
-  avatarUrl?: string; // Added avatarUrl
+  notes?: string;
+  avatarUrl?: string;
 }
 
 interface ClientContextType {
   clients: Client[];
-  addClient: (client: Omit<Client, 'id' | 'avatarUrl'>) => void;
+  addClient: (client: Omit<Client, 'id'>) => void;
   updateClient: (updatedClient: Client) => void;
   deleteClient: (clientId: string) => void;
   getClientById: (clientId: string) => Client | undefined;
@@ -34,12 +34,11 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
   const [clients, setClients] = useState<Client[]>([]);
   const { toast } = useToast();
 
-  const addClient = useCallback((clientData: Omit<Client, 'id' | 'avatarUrl'>) => {
+  const addClient = useCallback((clientData: Omit<Client, 'id'>) => {
     const newClient = { 
       ...clientData, 
       id: Date.now().toString(),
-      // For now, assign a generic placeholder avatar
-      avatarUrl: `https://placehold.co/60x60.png?text=${clientData.name.charAt(0)}` 
+      avatarUrl: clientData.avatarUrl || `https://placehold.co/60x60.png?text=${clientData.name.charAt(0)}` 
     };
     setClients(prev => [...prev, newClient]);
     toast({
@@ -63,6 +62,7 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
       toast({
         title: "Client Deleted",
         description: `${clientToDelete.name} has been removed.`,
+        variant: "destructive",
       });
     }
   }, [clients, toast]);
@@ -85,3 +85,4 @@ export const useClients = () => {
   }
   return context;
 };
+

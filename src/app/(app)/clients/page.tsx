@@ -23,7 +23,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, Briefcase, DollarSign, PiggyBank, Contact, Landmark, PackageSearch, Users2, BriefcaseBusiness } from "lucide-react";
+import { PlusCircle, Users, MoreHorizontal, Edit, Trash2, Search, Mail, Phone, MapPin, FileTextIcon, BriefcaseBusiness, DollarSign, PiggyBank, Contact, Landmark, PackageSearch, Users2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -197,19 +197,20 @@ export default function ClientsPage() {
     }
   };
   
-  const ClientDetailRow = ({ label, value, icon }: { label: string, value?: string | number | ReactNode, icon?: React.ElementType }) => {
-    const IconComponent = icon;
-    if (!value && value !==0 && value !== "") return null; // Allow empty string for notes or similar
+  const ClientDetailItem = ({ label, value, icon: Icon }: { label: string, value?: string | ReactNode, icon?: React.ElementType }) => {
+    if (value === undefined || value === null || value === "") return null;
     return (
-      <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
-        <div className="text-sm text-muted-foreground font-medium flex items-center">
-          {IconComponent && <IconComponent className="mr-2 h-4 w-4" />}
+      <div className="py-3">
+        <div className="text-xs text-muted-foreground flex items-center mb-1">
+          {Icon && <Icon className="mr-2 h-4 w-4" />}
           {label}
         </div>
-        <div className="text-sm text-foreground">{value}</div>
+        <div className="text-sm text-foreground whitespace-pre-wrap">{value}</div>
+         <Separator className="mt-3" />
       </div>
     );
   };
+
 
   const getStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
     if (!status) return "secondary";
@@ -221,32 +222,40 @@ export default function ClientsPage() {
     return "secondary";
   };
   
+  const getInvoiceStatusBadgeVariant = (status?: string): "default" | "secondary" | "destructive" | "outline" => {
+    if (!status) return "secondary";
+    const lowerStatus = status.toLowerCase();
+    if (lowerStatus === "paid") return "default"; // Typically success/green, using primary/default for now
+    if (lowerStatus === "sent") return "outline";
+    if (lowerStatus === "draft") return "secondary";
+    return "secondary";
+  };
+
+
   const handleClientListItemKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, clientId: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       if (selectedClientId === clientId) {
-        setSelectedClientId(null); // Deselect if already selected
+        setSelectedClientId(null);
       } else {
-        setSelectedClientId(clientId); // Select if not selected
+        setSelectedClientId(clientId);
       }
     }
   };
 
   const handleClientSelect = (clientId: string) => {
     if (selectedClientId === clientId) {
-      setSelectedClientId(null); // Deselect if already selected
+      setSelectedClientId(null);
     } else {
-      setSelectedClientId(clientId); // Select if not selected
+      setSelectedClientId(clientId);
     }
   };
 
 
   return (
-    // Page Root
-    <div className="flex h-full min-h-0"> {/* Added min-h-0 */}
-      {/* Left Pane: Client List */}
+    <div className="flex h-full min-h-0">
       <div className="w-1/3 min-w-[300px] max-w-[400px] border-r border-border flex flex-col bg-card/50 h-full">
-        <div className="p-4 space-y-4"> {/* Header section */}
+        <div className="p-4 space-y-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-foreground">Clients</h1>
              <Button variant="default" size="sm" onClick={() => setIsAddClientDialogOpen(true)}>New client</Button>
@@ -256,14 +265,14 @@ export default function ClientsPage() {
             <Input
               type="search"
               placeholder="Search clients..."
-              className="pl-10"
+              className="pl-10 bg-background border-border focus:border-primary"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
-        <ScrollArea className="flex-1 min-h-0"> {/* Client List Area */}
-          <div className="p-4 space-y-2 h-full flex flex-col"> {/* Inner content wrapper */}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="p-4 space-y-2 h-full flex flex-col">
             {filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <div
@@ -278,20 +287,15 @@ export default function ClientsPage() {
                   )}
                 >
                   <Avatar className="h-10 w-10">
-                    <AvatarImage src={client.avatarUrl || `https://placehold.co/60x60.png?text=${client.name.charAt(0)}`} alt={client.name} data-ai-hint="avatar user"/>
+                    <AvatarImage src={client.avatarUrl} alt={client.name} data-ai-hint="avatar person"/>
                     <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0"> 
                     <div className="font-semibold text-foreground truncate">{client.name}</div>
                     <div className="text-xs text-muted-foreground truncate">{client.company || "Individual"}</div>
                   </div>
-                  {client.status && (
-                     <Badge variant={getStatusBadgeVariant(client.status)} className="ml-auto mr-2 group-hover:hidden flex-shrink-0">
-                       {client.status}
-                     </Badge>
-                  )}
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()} >
                       <Button variant="ghost" size="icon" className="h-8 w-8 ml-auto flex-shrink-0">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
@@ -308,7 +312,7 @@ export default function ClientsPage() {
                 </div>
               ))
             ) : (
-              <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground"> {/* Ensure placeholder fills space */}
+              <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground">
                 <PackageSearch className="mx-auto h-12 w-12 mb-4 text-primary/50" />
                 <p>No clients found {searchTerm && "matching your search"}.</p>
                 {!searchTerm && <p className="text-sm">Click "New client" to add your first one.</p>}
@@ -318,7 +322,6 @@ export default function ClientsPage() {
         </ScrollArea>
       </div>
 
-      {/* Right Pane: Client Details or Overview Table */}
       <div className="flex-1 flex flex-col p-6 lg:p-8 overflow-y-auto">
         {selectedClient ? (
           <div className="space-y-6 flex-1 flex flex-col">
@@ -337,42 +340,48 @@ export default function ClientsPage() {
             </div>
             <Separator />
             <Tabs defaultValue="overview" className="w-full flex-1 flex flex-col">
-              <TabsList>
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="financials">Financials</TabsTrigger>
-                <TabsTrigger value="invoices">Invoices</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsList className="bg-transparent p-0 border-b border-border rounded-none justify-start">
+                <TabsTrigger value="overview" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Overview</TabsTrigger>
+                <TabsTrigger value="financials" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Financials</TabsTrigger>
+                <TabsTrigger value="invoices" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Invoices</TabsTrigger>
+                <TabsTrigger value="activity" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:shadow-none rounded-none bg-transparent px-4 py-2 text-muted-foreground hover:text-foreground">Activity</TabsTrigger>
               </TabsList>
-              <TabsContent value="overview" className="mt-6 space-y-6 flex-1">
-                <div className="rounded-lg border border-border p-6">
-                  <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><Contact className="mr-2 h-5 w-5"/>Contact & Details</h3>
-                  <ClientDetailRow label="Email" value={selectedClient.email} icon={Mail} />
-                  <ClientDetailRow label="Phone" value={selectedClient.phone} icon={Phone} />
-                  <ClientDetailRow label="Address" value={selectedClient.address} icon={MapPin} />
-                  
-                  {selectedClient.notes && (
-                    <div className="grid grid-cols-[auto,1fr] items-start gap-x-4 gap-y-1 py-2">
-                       <div className="text-sm text-muted-foreground font-medium flex items-start pt-0.5">
-                        <FileTextIcon className="mr-2 h-4 w-4 mt-0.5" /> Notes
-                       </div>
-                      <div className="text-sm text-foreground whitespace-pre-wrap">{selectedClient.notes}</div>
-                    </div>
-                  )}
-                </div>
+              
+              <TabsContent value="overview" className="mt-6 flex-1">
+                 <Card className="border-none shadow-none bg-transparent">
+                    <CardHeader className="px-0 pt-0">
+                        <CardTitle className="text-xl font-semibold text-foreground">Client details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-0">
+                        <ClientDetailItem label="Email" value={selectedClient.email} icon={Mail} />
+                        <ClientDetailItem label="Phone" value={selectedClient.phone} icon={Phone} />
+                        <ClientDetailItem label="Address" value={selectedClient.address} icon={MapPin} />
+                        <ClientDetailItem label="Notes" value={selectedClient.notes} icon={FileTextIcon} />
+                    </CardContent>
+                 </Card>
               </TabsContent>
-              <TabsContent value="financials" className="mt-6 space-y-6 flex-1">
-                <div className="rounded-lg border border-border p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><DollarSign className="mr-2 h-5 w-5"/>Financial Summary</h3>
-                    <ClientDetailRow label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
-                    <ClientDetailRow label="Monthly Earnings (PHP)" value={selectedClient.monthlyEarnings ? formatPHP(selectedClient.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
-                    <ClientDetailRow label="Total Earnings (USD)" value={selectedClient.totalEarningsUSD ? formatUSD(selectedClient.totalEarningsUSD) : "Not set"} icon={DollarSign} />
-                    <ClientDetailRow label="Total Earnings (PHP)" value={selectedClient.totalEarningsUSD ? formatPHP(selectedClient.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
-                    <ClientDetailRow label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
-                </div>
+
+              <TabsContent value="financials" className="mt-6 flex-1">
+                 <Card className="border-none shadow-none bg-transparent">
+                    <CardHeader className="px-0 pt-0">
+                        <CardTitle className="text-xl font-semibold text-foreground">Financial Summary</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-0">
+                        <ClientDetailItem label="Monthly Earnings (USD)" value={selectedClient.monthlyEarnings ? formatUSD(selectedClient.monthlyEarnings) : "Not set"} icon={DollarSign} />
+                        <ClientDetailItem label="Monthly Earnings (PHP)" value={selectedClient.monthlyEarnings ? formatPHP(selectedClient.monthlyEarnings * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
+                        <ClientDetailItem label="Total Earnings (USD)" value={selectedClient.totalEarningsUSD ? formatUSD(selectedClient.totalEarningsUSD) : "Not set"} icon={DollarSign} />
+                        <ClientDetailItem label="Total Earnings (PHP)" value={selectedClient.totalEarningsUSD ? formatPHP(selectedClient.totalEarningsUSD * EXCHANGE_RATE_USD_TO_PHP) : "Not set"} icon={PiggyBank} />
+                        <ClientDetailItem label="Payment Medium" value={selectedClient.paymentMedium} icon={Landmark} />
+                    </CardContent>
+                 </Card>
               </TabsContent>
+
               <TabsContent value="invoices" className="mt-6 flex-1">
-                 <div className="rounded-lg border border-border p-6">
-                    <h3 className="text-xl font-semibold mb-4 text-foreground flex items-center"><FileTextIcon className="mr-2 h-5 w-5"/>Invoices</h3>
+                <Card className="border-none shadow-none bg-transparent">
+                    <CardHeader className="px-0 pt-0">
+                        <CardTitle className="text-xl font-semibold text-foreground">Invoices</CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-0">
                     <Table>
                         <TableHeader>
                         <TableRow>
@@ -384,13 +393,33 @@ export default function ClientsPage() {
                         </TableHeader>
                         <TableBody>
                         <TableRow>
+                            <TableCell>INV-2023-001</TableCell>
+                            <TableCell>2023-01-15</TableCell>
+                            <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Paid")}>Paid</Badge></TableCell>
+                            <TableCell className="text-right">{formatUSD(1500)}</TableCell>
+                        </TableRow>
+                         <TableRow>
+                            <TableCell>INV-2023-002</TableCell>
+                            <TableCell>2023-02-20</TableCell>
+                            <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Sent")}>Sent</Badge></TableCell>
+                            <TableCell className="text-right">{formatUSD(2000)}</TableCell>
+                        </TableRow>
+                         <TableRow>
+                            <TableCell>INV-2023-003</TableCell>
+                            <TableCell>2023-03-25</TableCell>
+                            <TableCell><Badge variant={getInvoiceStatusBadgeVariant("Draft")}>Draft</Badge></TableCell>
+                            <TableCell className="text-right">{formatUSD(2500)}</TableCell>
+                        </TableRow>
+                        {/* Placeholder if no actual invoices */}
+                        {/* <TableRow> 
                             <TableCell colSpan={4} className="text-center text-muted-foreground h-24">
                             No invoices to display for this client yet.
                             </TableCell>
-                        </TableRow>
+                        </TableRow> */}
                         </TableBody>
                     </Table>
-                </div>
+                    </CardContent>
+                </Card>
               </TabsContent>
               <TabsContent value="activity" className="mt-6 flex-1">
                  <div className="rounded-lg border border-border p-6 text-center text-muted-foreground h-48 flex items-center justify-center">
@@ -429,7 +458,7 @@ export default function ClientsPage() {
                                     <TableCell>
                                         <div className="flex items-center gap-3">
                                             <Avatar className="h-8 w-8">
-                                                <AvatarImage src={client.avatarUrl || `https://placehold.co/40x40.png?text=${client.name.charAt(0)}`} alt={client.name} data-ai-hint="avatar client"/>
+                                                <AvatarImage src={client.avatarUrl} alt={client.name} data-ai-hint="avatar person"/>
                                                 <AvatarFallback>{client.name.charAt(0).toUpperCase()}</AvatarFallback>
                                             </Avatar>
                                             <span className="font-medium text-foreground">{client.name}</span>
@@ -471,7 +500,6 @@ export default function ClientsPage() {
         )}
       </div>
 
-      {/* Add Client Dialog */}
       <Dialog open={isAddClientDialogOpen} onOpenChange={(isOpen) => { setIsAddClientDialogOpen(isOpen); if (!isOpen) resetAddClientForm(); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Add New Client</DialogTitle><DialogDescription>Enter the details for your new client.</DialogDescription></DialogHeader>
@@ -487,14 +515,13 @@ export default function ClientsPage() {
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-status" className="text-right">Status</Label><Select value={newClientStatus} onValueChange={setNewClientStatus}><SelectTrigger className="col-span-3" id="add-status"><SelectValue placeholder="Select status" /></SelectTrigger><SelectContent>{clientStatusOptions.map(o => (<SelectItem key={o} value={o}>{o}</SelectItem>))}</SelectContent></Select></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-address" className="text-right">Address</Label><Input id="add-address" placeholder="Client's address" value={newClientAddress} onChange={(e) => setNewClientAddress(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-start gap-4"><Label htmlFor="add-notes" className="text-right pt-2">Notes</Label><Textarea id="add-notes" placeholder="Any relevant notes about the client..." value={newClientNotes} onChange={(e) => setNewClientNotes(e.target.value)} className="col-span-3" rows={3}/></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-avatar" className="text-right">Avatar URL</Label><Input id="add-avatar" placeholder="https://example.com/avatar.png" value={newClientAvatarUrl} onChange={(e) => setNewClientAvatarUrl(e.target.value)} className="col-span-3"/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="add-avatar" className="text-right">Avatar URL</Label><Input id="add-avatar" placeholder="https://placehold.co/100x100.png" value={newClientAvatarUrl} onChange={(e) => setNewClientAvatarUrl(e.target.value)} className="col-span-3"/></div>
             </div>
           </ScrollArea>
           <DialogFooter><Button type="button" variant="outline" onClick={() => setIsAddClientDialogOpen(false)}>Cancel</Button><Button type="button" onClick={handleAddClient}>Save Client</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Client Dialog */}
       <Dialog open={isEditClientDialogOpen} onOpenChange={(isOpen) => { setIsEditClientDialogOpen(isOpen); if (!isOpen) setEditingClient(null); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader><DialogTitle>Edit Client: {editingClient?.name}</DialogTitle><DialogDescription>Update client details.</DialogDescription></DialogHeader>
@@ -510,7 +537,7 @@ export default function ClientsPage() {
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-status" className="text-right">Status</Label><Select value={editClientStatus} onValueChange={setEditClientStatus}><SelectTrigger className="col-span-3" id="edit-status"><SelectValue placeholder="Select status" /></SelectTrigger><SelectContent>{clientStatusOptions.map(o => (<SelectItem key={o} value={o}>{o}</SelectItem>))}</SelectContent></Select></div>
               <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-address" className="text-right">Address</Label><Input id="edit-address" value={editClientAddress} onChange={(e) => setEditClientAddress(e.target.value)} className="col-span-3"/></div>
               <div className="grid grid-cols-4 items-start gap-4"><Label htmlFor="edit-notes" className="text-right pt-2">Notes</Label><Textarea id="edit-notes" value={editClientNotes} onChange={(e) => setEditClientNotes(e.target.value)} className="col-span-3" rows={3}/></div>
-              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-avatar" className="text-right">Avatar URL</Label><Input id="edit-avatar" placeholder="https://example.com/avatar.png" value={editClientAvatarUrl} onChange={(e) => setEditClientAvatarUrl(e.target.value)} className="col-span-3"/></div>
+              <div className="grid grid-cols-4 items-center gap-4"><Label htmlFor="edit-avatar" className="text-right">Avatar URL</Label><Input id="edit-avatar" placeholder="https://placehold.co/100x100.png" value={editClientAvatarUrl} onChange={(e) => setEditClientAvatarUrl(e.target.value)} className="col-span-3"/></div>
             </div>
           </ScrollArea>
           <DialogFooter><Button type="button" variant="outline" onClick={() => setIsEditClientDialogOpen(false)}>Cancel</Button><Button type="button" onClick={handleSaveClientChanges}>Save Changes</Button></DialogFooter>
@@ -519,4 +546,3 @@ export default function ClientsPage() {
     </div>
   );
 }
-
