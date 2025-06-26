@@ -1,390 +1,52 @@
+"use client";
 
-"use client"; 
-
-import type { ChartConfig } from "@/components/ui/chart";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Target, PlusCircle, ListChecks } from "lucide-react"; 
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"; 
-import { 
-  BarChart as RechartsActualBarChart,
-  Bar,
-  CartesianGrid, 
-  XAxis, 
-  YAxis, 
-  ResponsiveContainer, 
-  Line as RechartsLine,
-  LineChart as RechartsActualLineChart,
-} from 'recharts';
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-
-const chartConfig = {
-  income: { label: "Income", color: "hsl(var(--chart-2))" }, 
-  expenses: { label: "Expenses", color: "hsl(var(--chart-1))" }, 
-} satisfies ChartConfig; 
-
-const expenseBreakdownChartConfig = {
-  value: { label: "Amount", color: "hsl(var(--chart-1))" },
-} satisfies ChartConfig;
-
-interface Goal {
-  name: string;
-  target: number;
-  current: number;
-}
-
-interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  type: "income" | "expense";
-  date: string;
-}
-
-interface DashboardState {
-  totalIncome: number;
-  totalIncomeChange: string; 
-  totalExpenses: number;
-  totalExpensesChange: string; 
-  netSavings: number;
-  netSavingsChange: string; 
-  netProfit: number;
-  netProfitChange: string; 
-  incomeExpenseChartData: { month: string; income: number; expenses: number }[];
-  expenseBreakdownData: { name: string; value: number }[];
-  recentTransactions: Transaction[];
-  goalsData: Goal[];
-}
-
-const initialDashboardState: DashboardState = {
-  totalIncome: 0,
-  totalIncomeChange: "+0%",
-  totalExpenses: 0,
-  totalExpensesChange: "+0%",
-  netSavings: 0,
-  netSavingsChange: "+0%",
-  netProfit: 0,
-  netProfitChange: "+0%",
-  incomeExpenseChartData: [],
-  expenseBreakdownData: [],
-  recentTransactions: [],
-  goalsData: [],
-};
+import { useAuth } from "@/contexts/AuthContext";
+import { FinancialOverview } from "@/components/dashboard/FinancialOverview";
+import { RevenueChart } from "@/components/dashboard/RevenueChart";
+import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
+import { QuickActions } from "@/components/dashboard/QuickActions";
 
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [dashboardData, setDashboardData] = useState<DashboardState>(initialDashboardState);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); 
-      // In a real app, replace this with actual data fetching:
-      setDashboardData({
-        totalIncome: 0, // Example: fetchedData.summary.totalIncome,
-        totalIncomeChange: "+0%", // Example: calculatePercentageChange(fetchedData.summary.totalIncome, fetchedData.previousPeriod.totalIncome),
-        totalExpenses: 0,
-        totalExpensesChange: "+0%",
-        netSavings: 0,
-        netSavingsChange: "+0%",
-        netProfit: 0,
-        netProfitChange: "+0%",
-        incomeExpenseChartData: [
-          // Example: { month: "Jan", income: 0, expenses: 0 }, ...
-        ],
-        expenseBreakdownData: [
-          // Example: { name: "Groceries", value: 0 }, ...
-        ],
-        recentTransactions: [
-          // Example: { id: "1", description: "Client Payment", amount: 2000, type: "income", date: "2023-10-26" }...
-        ],
-        goalsData: [
-          // Example: { name: "New Laptop", target: 80000, current: 15000 } ...
-        ]
-      }); 
-      setIsLoading(false);
-    };
-
-    fetchData();
-  }, []);
-
-  const formatCurrency = (value: number) => {
-    return `₱${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-  
-  const getChangeColor = (change: string) => {
-    if (change.startsWith('+')) return 'text-positive'; // Ensure 'text-positive' is defined in globals.css
-    if (change.startsWith('-')) return 'text-destructive';
-    return 'text-muted-foreground';
-  };
+  const { user } = useAuth();
 
   return (
-    <div className="space-y-6 w-full flex flex-col flex-1"> 
+    <div className="space-y-6 w-full flex flex-col flex-1">
+      {/* Header */}
       <div>
         <h1 className="text-4xl font-bold tracking-tight text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome back, Emily</p>
-      </div>
-      
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-muted-foreground">Income</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            ) : (
-              <>
-                <div className="text-3xl font-bold text-foreground">{formatCurrency(dashboardData.totalIncome)}</div>
-                <p className={`text-sm ${getChangeColor(dashboardData.totalIncomeChange)}`}>{dashboardData.totalIncomeChange}</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-muted-foreground">Expenses</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            ) : (
-              <>
-                <div className="text-3xl font-bold text-foreground">{formatCurrency(dashboardData.totalExpenses)}</div>
-                <p className={`text-sm ${getChangeColor(dashboardData.totalExpensesChange)}`}>{dashboardData.totalExpensesChange}</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-muted-foreground">Savings</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            ) : (
-              <>
-                <div className="text-3xl font-bold text-foreground">{formatCurrency(dashboardData.netSavings)}</div>
-                 <p className={`text-sm ${getChangeColor(dashboardData.netSavingsChange)}`}>{dashboardData.netSavingsChange}</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium text-muted-foreground">Net Profit</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            ) : (
-              <>
-                <div className="text-3xl font-bold text-foreground">{formatCurrency(dashboardData.netProfit)}</div>
-                <p className={`text-sm ${getChangeColor(dashboardData.netProfitChange)}`}>{dashboardData.netProfitChange}</p>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <p className="text-muted-foreground">
+          Welcome back, {user?.displayName || user?.email || 'User'}
+        </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-3 flex-1 min-h-0"> 
-        <Card className="lg:col-span-2 flex flex-col"> 
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Income vs. Expenses</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1"> 
-            {isLoading ? (
-              <div className="flex justify-center items-center h-full"> 
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            ) : dashboardData.incomeExpenseChartData.length > 0 ? (
-              <ChartContainer config={chartConfig} className="h-full w-full"> 
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsActualLineChart data={dashboardData.incomeExpenseChartData} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="hsl(var(--muted))" strokeDasharray="3 0" />
-                    <XAxis 
-                      dataKey="month" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false} 
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false} 
-                      tickFormatter={(value) => `${value/1000}k`} 
-                    />
-                    <ChartTooltip
-                      cursor={{ stroke: "hsl(var(--border))", strokeWidth: 1, strokeDasharray: "3 3" }}
-                      content={<ChartTooltipContent indicator="line" nameKey="name" labelKey="month" hideIndicator />}
-                      wrapperStyle={{ outline: "none" }}
-                      contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "var(--radius)" }}
-                    />
-                    <RechartsLine type="monotone" dataKey="income" stroke="var(--color-income)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--color-income)", strokeWidth:0 }} />
-                    <RechartsLine type="monotone" dataKey="expenses" stroke="var(--color-expenses)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "var(--color-expenses)", strokeWidth:0 }} />
-                  </RechartsActualLineChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-              <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground">
-                <p className="mb-4">No income or expense data to display for the chart.</p>
-                 <div className="flex gap-2">
-                  <Link href="/income" passHref>
-                    <Button variant="outline">
-                       Add Income
-                    </Button>
-                  </Link>
-                  <Link href="/expenses" passHref>
-                    <Button variant="outline">
-                       Add Expense
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        
-        <Card className="lg:col-span-1 flex flex-col"> 
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Expense Breakdown</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1"> 
-             {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            ) : dashboardData.expenseBreakdownData.length > 0 ? (
-              <ChartContainer config={expenseBreakdownChartConfig} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsActualBarChart data={dashboardData.expenseBreakdownData} margin={{ top: 5, right: 10, left: -30, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="hsl(var(--muted))" strokeDasharray="3 0" />
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false}
-                    />
-                    <YAxis 
-                      stroke="hsl(var(--muted-foreground))" 
-                      fontSize={12} 
-                      tickLine={false} 
-                      axisLine={false}
-                      tickFormatter={(value) => `${value/1000}k`} 
-                    />
-                     <ChartTooltip
-                        cursor={{ fill: "hsl(var(--border))" }}
-                        content={<ChartTooltipContent indicator="dot" nameKey="name" hideIndicator />}
-                        wrapperStyle={{ outline: "none" }}
-                        contentStyle={{ backgroundColor: "hsl(var(--popover))", borderColor: "hsl(var(--border))", borderRadius: "var(--radius)" }}
-                      />
-                    <Bar dataKey="value" fill="var(--color-value)" radius={[4, 4, 0, 0]} />
-                  </RechartsActualBarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            ) : (
-               <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground">
-                <p className="mb-4">No expense breakdown data to display.</p>
-                  <Link href="/expenses" passHref>
-                    <Button variant="outline">
-                       Add Expense
-                    </Button>
-                  </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Financial Overview Cards */}
+      <FinancialOverview />
+
+      {/* Main Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Revenue Chart - Takes 2 columns */}
+        <div className="lg:col-span-2">
+          <RevenueChart 
+            showExpenses={true}
+            showNetProfit={false}
+            monthsToShow={6}
+          />
+        </div>
+
+        {/* Quick Actions - Takes 1 column */}
+        <div className="lg:col-span-1">
+          <QuickActions />
+        </div>
       </div>
 
-      {/* New Row for Financial Goals and Recent Transactions */}
-      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 mt-6">
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Financial Goals</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            ) : dashboardData.goalsData.length > 0 ? (
-              <div className="space-y-4">
-                {/* In a real app, map over dashboardData.goalsData here */}
-                {/* For now, this will be empty, so the else block will render. */}
-                {/* Example: <GoalTracker goalName="New Laptop" targetAmount={80000} currentAmount={15000} /> */}
-              </div>
-            ) : (
-              <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground p-6">
-                <Target className="h-12 w-12 mb-4 text-primary" />
-                <h3 className="text-lg font-semibold mb-2">Aim for Your Ambitions</h3>
-                <p className="mb-4 text-sm">Set financial goals to track your progress towards your dreams.</p>
-                <Link href="/goals" passHref>
-                  <Button variant="outline">
-                    <PlusCircle className="mr-2 h-4 w-4" /> Set a New Goal
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="flex flex-col">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1">
-            {isLoading ? (
-              <div className="flex justify-center items-center h-full">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-              </div>
-            ) : dashboardData.recentTransactions.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dashboardData.recentTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="font-medium">{transaction.description}</TableCell>
-                      <TableCell className="text-muted-foreground">{transaction.date}</TableCell>
-                      <TableCell 
-                        className={cn(
-                          "text-right font-semibold",
-                          transaction.type === 'income' ? 'text-positive' : 'text-destructive'
-                        )}
-                      >
-                        {transaction.type === 'expense' ? '-' : ''}{formatCurrency(transaction.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="flex flex-col justify-center items-center h-full text-center text-muted-foreground p-6">
-                 <ListChecks className="h-12 w-12 mb-4 text-primary" />
-                <p>No recent transactions to display.</p>
-                <p className="text-sm">Start by adding income or expenses.</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Bottom Row */}
+      <div className="grid gap-6 lg:grid-cols-1">
+        {/* Recent Transactions - Full width */}
+        <RecentTransactions 
+          limit={10}
+          showViewAll={true}
+        />
       </div>
-
     </div>
   );
 }
-
-
-    

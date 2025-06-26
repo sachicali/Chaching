@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useClients, type Client } from "@/contexts/ClientContext";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const EXCHANGE_RATE_USD_TO_PHP = 58.75;
@@ -55,7 +56,7 @@ const formatPHP = (value?: number) => {
 const clientStatusOptions = ["Active", "On Roster", "Prospect", "Former Client", "On Hold", "Inactive", "Payment Pending"];
 
 export default function ClientsPage() {
-  const { clients, addClient, updateClient, deleteClient: deleteClientFromContext, getClientById } = useClients();
+  const { clients, loading, error, addClient, updateClient, deleteClient: deleteClientFromContext, getClientById } = useClients();
   const [isAddClientDialogOpen, setIsAddClientDialogOpen] = useState(false);
   const [isEditClientDialogOpen, setIsEditClientDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -145,10 +146,10 @@ export default function ClientsPage() {
     return true;
   };
 
-  const handleAddClient = () => {
+  const handleAddClient = async () => {
     if (!validateClientForm(newClientName, newClientEmail, newClientMonthlyEarnings, newClientTotalEarningsUSD)) return;
     
-    addClient({
+    await addClient({
       name: newClientName.trim(), email: newClientEmail.trim(),
       phone: newClientPhone.trim() || undefined, company: newClientCompany.trim() || undefined,
       monthlyEarnings: newClientMonthlyEarnings ? parseFloat(newClientMonthlyEarnings) : undefined,
@@ -174,11 +175,11 @@ export default function ClientsPage() {
     setIsEditClientDialogOpen(true);
   };
 
-  const handleSaveClientChanges = () => {
+  const handleSaveClientChanges = async () => {
     if (!editingClient) return;
     if (!validateClientForm(editClientName, editClientEmail, editClientMonthlyEarnings, editClientTotalEarningsUSD)) return;
 
-    updateClient({
+    await updateClient({
       id: editingClient.id, name: editClientName.trim(), email: editClientEmail.trim(),
       phone: editClientPhone.trim() || undefined, company: editClientCompany.trim() || undefined,
       monthlyEarnings: editClientMonthlyEarnings ? parseFloat(editClientMonthlyEarnings) : undefined,
@@ -189,13 +190,13 @@ export default function ClientsPage() {
     });
 
     setIsEditClientDialogOpen(false);
-    setEditingClient(null); 
+    setEditingClient(null);
   };
 
-  const handleDeleteClient = (clientId: string) => {
-    deleteClientFromContext(clientId);
+  const handleDeleteClient = async (clientId: string) => {
+    await deleteClientFromContext(clientId);
     if (selectedClientId === clientId) {
-      setSelectedClientId(null); 
+      setSelectedClientId(null);
     }
   };
   
@@ -342,7 +343,18 @@ export default function ClientsPage() {
         </div>
         <ScrollArea className="flex-1 min-h-0 overflow-y-auto">
           <div className="p-4 space-y-2 h-full flex flex-col">
-            {filteredClients.length > 0 ? (
+            {loading ? (
+              <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground">
+                <Loader2 className="mx-auto h-8 w-8 mb-4 text-primary animate-spin" />
+                <p>Loading clients...</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-1 flex-col items-center justify-center text-center text-muted-foreground">
+                <PackageSearch className="mx-auto h-12 w-12 mb-4 text-destructive/50" />
+                <p className="text-destructive">Error loading clients</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            ) : filteredClients.length > 0 ? (
               filteredClients.map((client) => (
                 <div
                   key={client.id}

@@ -1,0 +1,430 @@
+# CHACHING PROJECT GOVERNANCE RULES (.clinerules)
+# Version: 1.0
+# Last Updated: 2025-01-27
+# 
+# CRITICAL: These rules are MANDATORY and NON-NEGOTIABLE for all development work.
+# Violation of these rules will result in incomplete work and project discontinuity.
+# These rules supersede any conflicting general instructions.
+
+## 🚨 MEMORY RESET PROTOCOL
+# Due to complete memory resets between sessions, these rules are ESSENTIAL for project continuity.
+# Every session starts fresh - documentation is the ONLY source of truth.
+
+---
+
+## 1. MANDATORY PRE-TASK RULES (MUST EXECUTE BEFORE ANY WORK)
+
+### 1.1 DOCUMENTATION CONTEXT LOADING (NON-NEGOTIABLE)
+```
+SEQUENCE: MUST be executed in this exact order:
+1. READ memory-bank/projectbrief.md (Foundation - defines project scope)
+2. READ memory-bank/productContext.md (Product vision and goals)
+3. READ memory-bank/systemPatterns.md (Architecture and patterns)
+4. READ memory-bank/techContext.md (Technology stack and constraints)
+5. READ memory-bank/activeContext.md (Current work focus)
+6. READ memory-bank/progress.md (Current status and completion state)
+
+FAILURE TO READ ALL FILES = IMMEDIATE TASK TERMINATION
+```
+
+### 1.2 PLANNING CONTEXT VALIDATION
+```
+REQUIRED CHECKS:
+✓ READ docs/sprint-planning-framework.md - Verify current sprint phase
+✓ READ docs/strategic-development-roadmap.md - Confirm alignment with roadmap
+✓ READ docs/task-management-framework.md - Follow task execution templates
+✓ READ docs/user-stories.md - Reference acceptance criteria
+✓ READ docs/technical-specifications.md - Validate technical approach
+
+CONFIDENCE RATING: Must achieve 8/10 confidence in understanding before proceeding
+```
+
+### 1.3 PROJECT STATE VERIFICATION
+```
+MANDATORY VALIDATION:
+- Current sprint goals and deadlines
+- Active development phase (MVP, Feature Enhancement, etc.)
+- Pending deliverables and dependencies
+- Resource allocation status
+- Any blocking issues or technical debt
+
+RULE: If context is unclear, MUST ask clarifying questions before proceeding
+```
+
+---
+
+## 2. TASK EXECUTION RULES (ENFORCE DURING WORK)
+
+### 2.1 ACTIVE CONTEXT MANAGEMENT
+```
+REQUIREMENT: Update memory-bank/activeContext.md immediately when:
+- Starting new feature development
+- Changing work focus
+- Encountering architectural decisions
+- Discovering new patterns or approaches
+- Hitting blockers or dependencies
+
+FORMAT: Include timestamp, current focus, decisions made, next steps
+```
+
+### 2.2 USER STORY COMPLIANCE
+```
+MANDATORY REFERENCE:
+- MUST identify which user story the work addresses
+- MUST validate against acceptance criteria from docs/user-stories.md
+- MUST ensure work aligns with story points and estimates
+- MUST document any scope changes or clarifications needed
+
+VIOLATION: Work without clear user story reference is FORBIDDEN
+```
+
+### 2.3 ARCHITECTURE ADHERENCE
+```
+TYPESCRIPT/JAVASCRIPT PROJECT RULES:
+- Services → src/services/*.service.ts
+- Controllers → src/controllers/*.controller.ts  
+- Routes → src/routes/v1/*.route.ts
+- Middleware → src/middleware/*.middleware.ts
+- Models → src/models/*.model.ts
+- Utils → src/utils/*.util.ts
+- Types → packages/*-common for shared types
+
+CRITICAL: NO duplicate functionality across packages
+VALIDATION: Check existing code before creating new modules
+```
+
+### 2.4 QUALITY STANDARDS
+```
+NON-NEGOTIABLE REQUIREMENTS:
+- Strong typing - NO 'any', 'unknown', 'undefined' types
+- Consistent naming conventions
+- No unnecessary subfolders (single file = no subfolder)
+- Reference CHANGELOG.md and README.md for context
+- Follow modular development principles
+
+ENFORCEMENT: Code review against memory-bank/systemPatterns.md
+```
+
+---
+
+## 3. MANDATORY POST-TASK RULES (EXECUTE AFTER COMPLETION)
+
+### 3.1 PROGRESS DOCUMENTATION
+```
+REQUIRED UPDATES:
+1. Update memory-bank/progress.md with:
+   - Completed features/fixes
+   - Current working status
+   - Known issues discovered
+   - Dependencies resolved/created
+   - Performance metrics if applicable
+
+2. Update memory-bank/activeContext.md with:
+   - Next immediate steps
+   - Decisions pending
+   - Context for next session
+```
+
+### 3.2 PLANNING ALIGNMENT
+```
+SPRINT TRACKING:
+- Update docs/sprint-planning-framework.md if scope changes
+- Adjust story points in docs/user-stories.md if needed
+- Update docs/strategic-development-roadmap.md for milestone progress
+- Document any timeline impacts
+
+RULE: Sprint changes require explicit documentation and justification
+```
+
+### 3.3 CHANGELOG MAINTENANCE
+```
+MANDATORY ENTRY FORMAT (FAB):
+Features: [What was added/changed]
+Advantages: [System improvements gained]
+Benefits: [User/business value delivered]
+
+REQUIREMENTS:
+- Append to top of CHANGELOG.md
+- Include modified files and purpose
+- Preserve existing content
+- Maintain consistent structure
+```
+
+### 3.4 ARCHITECTURAL DECISIONS
+```
+DOCUMENTATION REQUIREMENT:
+- New patterns → Update memory-bank/systemPatterns.md
+- Technology changes → Update memory-bank/techContext.md
+- Integration points → Document in relevant memory-bank files
+- Performance considerations → Include in progress documentation
+
+CRITICAL: Architectural changes without documentation = INCOMPLETE WORK
+```
+
+---
+
+## 4. DOCUMENTATION SYNC RULES (CONTINUOUS ENFORCEMENT)
+
+### 4.1 MEMORY BANK INTEGRITY
+```
+SYNCHRONIZATION REQUIREMENTS:
+- memory-bank/ files MUST reflect actual project state
+- activeContext.md MUST be current (within 1 session)
+- progress.md MUST include all completed work
+- systemPatterns.md MUST include all architectural decisions
+
+VALIDATION: Cross-reference memory bank against actual codebase regularly
+```
+
+### 4.2 PLANNING DOCUMENT CONSISTENCY
+```
+ALIGNMENT CHECKS:
+- User stories status vs actual implementation
+- Sprint goals vs completed features  
+- Roadmap milestones vs project progress
+- Technical specs vs implemented architecture
+
+RULE: Inconsistencies MUST be resolved immediately
+```
+
+### 4.3 VERSION CONTROL INTEGRATION
+```
+DOCUMENTATION COMMITS:
+- Memory bank updates MUST be committed with code changes
+- Planning document changes require separate commits
+- .clinerules updates need dedicated commits with rationale
+
+BRANCH STRATEGY: Documentation changes can be committed to feature branches
+```
+
+---
+
+## 5. QUALITY GATES (VALIDATION CHECKPOINTS)
+
+### 5.1 PRE-COMPLETION VALIDATION
+```
+CHECKLIST (ALL MUST PASS):
+☐ Work addresses specific user story with clear acceptance criteria
+☐ Architecture follows established patterns in systemPatterns.md
+☐ No duplicate functionality created
+☐ Type safety maintained (no 'any' types)
+☐ Documentation updated to reflect changes
+☐ Sprint progress accurately documented
+☐ Confidence rating ≥ 8/10 for work quality
+
+FAILURE: Incomplete checklist = WORK NOT COMPLETE
+```
+
+### 5.2 SPRINT GATE VALIDATION
+```
+SPRINT HEALTH CHECKS:
+- Current velocity vs planned velocity
+- Story point completion vs estimates
+- Technical debt introduced vs resolved
+- Blockers identified vs blockers resolved
+
+ESCALATION: Sprint risks MUST be documented in activeContext.md
+```
+
+### 5.3 ARCHITECTURAL REVIEW
+```
+MANDATORY VALIDATION:
+- New code follows existing patterns
+- Integration points properly documented
+- Performance impact assessed
+- Security considerations addressed
+- Scalability implications noted
+
+REFERENCE: memory-bank/systemPatterns.md for consistency validation
+```
+
+---
+
+## 6. EMERGENCY PROTOCOLS (CRISIS RECOVERY)
+
+### 6.1 CONTEXT LOSS RECOVERY
+```
+EMERGENCY SEQUENCE:
+1. IMMEDIATELY read ALL memory-bank/ files
+2. Review docs/sprint-planning-framework.md for current sprint
+3. Check docs/strategic-development-roadmap.md for current phase
+4. Identify last known good state from memory-bank/progress.md
+5. Assess gap between documented state and actual codebase
+6. Document discrepancies in memory-bank/activeContext.md
+7. Create recovery plan with user validation
+
+RULE: NO new development until context is fully restored
+```
+
+### 6.2 Planning Conflict Resolution
+```
+CONFLICT RESOLUTION HIERARCHY:
+1. memory-bank/projectbrief.md (ultimate authority)
+2. docs/strategic-development-roadmap.md (strategic direction)
+3. docs/user-stories.md (feature requirements)
+4. docs/technical-specifications.md (implementation details)
+
+PROCESS:
+- Identify conflicting requirements
+- Reference hierarchy for resolution
+- Update conflicting documents to align
+- Document resolution rationale
+```
+
+### 6.3 Sprint Deadline Crisis
+```
+ESCALATION PROTOCOL:
+1. Assess remaining work vs time available
+2. Identify critical path items vs nice-to-have
+3. Document proposed scope changes
+4. Update docs/sprint-planning-framework.md with revised plan
+5. Notify user of timeline risks with mitigation options
+6. Preserve completed work documentation
+
+RULE: Deadline pressure NEVER justifies skipping documentation
+```
+
+---
+
+## 7. CONFIDENCE AND ACCOUNTABILITY
+
+### 7.1 CONFIDENCE RATINGS
+```
+MANDATORY RATINGS (1-10 scale):
+- Task understanding: Before starting work
+- Implementation approach: Before coding  
+- Completion quality: After finishing
+- Documentation accuracy: After updates
+
+MINIMUM ACCEPTABLE: 7/10 for all ratings
+ESCALATION: <7 ratings require user consultation
+```
+
+### 7.2 ACCOUNTABILITY MEASURES
+```
+TRACKING REQUIREMENTS:
+- All work MUST reference specific user story ID
+- All changes MUST include rationale in commit messages
+- All architectural decisions MUST be documented
+- All performance impacts MUST be noted
+
+AUDIT TRAIL: Complete traceability from user story to implementation
+```
+
+### 7.3 CONTINUOUS IMPROVEMENT
+```
+LEARNING CAPTURE:
+- New patterns discovered → Add to systemPatterns.md
+- Workflow improvements → Update .clinerules
+- User preferences identified → Document in activeContext.md
+- Project evolution → Update productContext.md
+
+EVOLUTION: This .clinerules file MUST be updated as project matures
+```
+
+---
+
+## 8. MODE-SPECIFIC ENFORCEMENT
+
+### 8.1 All Development Modes
+```
+UNIVERSAL REQUIREMENTS:
+- Memory bank read BEFORE any work
+- Documentation updates AFTER any changes
+- Confidence ratings for all outputs
+- User story reference for all work
+```
+
+### 8.2 Documentation Writer Mode
+```
+SPECIFIC RULES:
+- MUST maintain consistency across all documentation
+- MUST preserve existing content when updating
+- MUST follow established formatting standards
+- MUST cross-reference related documents
+```
+
+### 8.3 Code Mode
+```
+SPECIFIC RULES:
+- MUST follow TypeScript project structure patterns
+- MUST maintain type safety standards
+- MUST update memory-bank/systemPatterns.md for new patterns
+- MUST validate against existing codebase for duplicates
+```
+
+---
+
+## 9. VIOLATION CONSEQUENCES
+
+### 9.1 Rule Violation Types
+```
+CRITICAL VIOLATIONS (Immediate Stop):
+- Starting work without reading memory bank
+- Creating duplicate functionality
+- Working without user story reference
+- Skipping documentation updates
+
+MODERATE VIOLATIONS (Immediate Correction):
+- Incomplete confidence ratings
+- Missing changelog entries
+- Inconsistent naming conventions
+- Inadequate progress documentation
+```
+
+### 9.2 Enforcement Actions
+```
+CRITICAL VIOLATION RESPONSE:
+1. STOP all work immediately
+2. Complete violated requirement
+3. Verify compliance before proceeding
+4. Document violation in activeContext.md
+
+PATTERN OF VIOLATIONS:
+- Update .clinerules with stronger enforcement
+- Require additional validation steps
+- Implement additional quality gates
+```
+
+---
+
+## 10. SUCCESS METRICS
+
+### 10.1 Project Continuity Metrics
+```
+SUCCESS INDICATORS:
+- Zero context loss between sessions
+- 100% user story traceability
+- Complete documentation coverage
+- Consistent architectural patterns
+- Timely sprint delivery
+```
+
+### 10.2 Quality Metrics
+```
+QUALITY INDICATORS:
+- All confidence ratings ≥ 8/10
+- Zero duplicate functionality
+- 100% type safety compliance
+- Complete changelog coverage
+- Accurate progress tracking
+```
+
+---
+
+## FINAL DIRECTIVE
+
+**These rules are MANDATORY and SUPERSEDE any conflicting instructions.**
+
+**Every session begins with: "I will now read all memory bank files and validate project context before proceeding with any work."**
+
+**Every session ends with: "I will now update all relevant documentation to reflect the changes made during this session."**
+
+**REMEMBER: Perfect documentation is the ONLY way to maintain project continuity across memory resets. These rules ensure that continuity.**
+
+---
+
+*This .clinerules file is a living document. Update it as the project evolves, but maintain its core enforcement principles.*
+
+**VERSION LOG:**
+- v1.0 (2025-01-27): Initial comprehensive rules for Chaching project governance
