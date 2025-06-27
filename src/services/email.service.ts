@@ -19,7 +19,9 @@ import type {
   EmailHistory,
   EmailStatus,
   EmailAttachment,
-  EmailData 
+  EmailData,
+  EmailType,
+  EmailPriority
 } from '@/types/database.types';
 
 // ==================== CONSTANTS ====================
@@ -70,6 +72,7 @@ export class EmailService {
       recipientEmail?: string;
       ccEmails?: string[];
       bccEmails?: string[];
+      priority?: EmailPriority;
     } = {}
   ): Promise<{ emailId: string; status: EmailStatus }> {
     try {
@@ -146,6 +149,8 @@ export class EmailService {
         recipientEmail,
         subject: emailContent.subject,
         templateType,
+        emailType: 'invoice' as EmailType,
+        priority: options.priority || 'normal',
         status: EMAIL_STATUS.PENDING,
         sentAt: Timestamp.now(),
         attachments: [attachment]
@@ -176,7 +181,8 @@ export class EmailService {
 
       const result = await this.sendInvoiceEmail(invoice, {
         templateType: templateType as keyof typeof DEFAULT_EMAIL_TEMPLATES,
-        customSubject: this.generateReminderSubject(invoice, reminderType)
+        customSubject: this.generateReminderSubject(invoice, reminderType),
+        priority: reminderType === 'final' ? 'high' : 'normal'
       });
 
       // Update invoice reminder tracking
@@ -252,6 +258,8 @@ export class EmailService {
         recipientEmail: invoice.clientEmail,
         subject: emailContent.subject,
         templateType: 'PAYMENT_CONFIRMATION',
+        emailType: 'payment_confirmation' as EmailType,
+        priority: 'normal',
         status: EMAIL_STATUS.PENDING,
         sentAt: Timestamp.now()
       });
@@ -453,6 +461,8 @@ export class EmailService {
     recipientEmail: string;
     subject: string;
     templateType: string;
+    emailType: EmailType;
+    priority: EmailPriority;
     status: EmailStatus;
     sentAt: Timestamp;
     attachments?: EmailAttachment[];

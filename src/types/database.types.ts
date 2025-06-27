@@ -385,6 +385,9 @@ export interface InvoiceTemplateFormData {
 // ==================== EMAIL AUTOMATION TYPES ====================
 
 export type EmailStatus = 'pending' | 'processing' | 'delivered' | 'failed' | 'bounced';
+export type EmailType = 'invoice' | 'reminder' | 'payment_confirmation' | 'marketing' | 'custom';
+export type EmailPriority = 'low' | 'normal' | 'high';
+export type ScheduledEmailStatus = 'pending' | 'processing' | 'sent' | 'failed' | 'cancelled';
 
 export interface EmailTemplate {
   id: string;
@@ -395,8 +398,48 @@ export interface EmailTemplate {
   htmlContent?: string;
   textContent?: string;
   isDefault: boolean;
+  
+  // Phase 2: Template Versioning
+  version?: number;
+  isActive?: boolean;
+  parentTemplateId?: string; // For versioned templates
+  
+  // Phase 2: Template Performance Metrics
+  performanceMetrics?: EmailTemplatePerformanceMetrics;
+  
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+export interface EmailTemplatePerformanceMetrics {
+  sentCount: number;
+  deliveredCount: number;
+  openedCount: number;
+  clickedCount: number;
+  bounceCount: number;
+  
+  // Calculated rates
+  deliveryRate: number; // delivered / sent
+  openRate: number; // opened / delivered
+  clickRate: number; // clicked / delivered
+  bounceRate: number; // bounced / sent
+  
+  lastUpdated: Timestamp;
+}
+
+export interface EmailTemplateVersion {
+  id: string;
+  templateId: string;
+  version: number;
+  content: {
+    subject: string;
+    htmlContent?: string;
+    textContent?: string;
+  };
+  isActive: boolean;
+  performanceMetrics: EmailTemplatePerformanceMetrics;
+  createdAt: Timestamp;
+  createdBy: string;
 }
 
 export interface EmailAttachment {
@@ -425,18 +468,246 @@ export interface EmailHistory {
   id: string;
   userId: string;
   emailId: string;
-  invoiceId: string;
+  invoiceId?: string;
   recipientEmail: string;
   subject: string;
   templateType: string;
+  templateId?: string;
+  templateVersion?: number;
   status: EmailStatus;
   sentAt: Timestamp;
   deliveredAt?: Timestamp;
   openedAt?: Timestamp;
+  clickedAt?: Timestamp;
+  bouncedAt?: Timestamp;
   errorMessage?: string;
   attachments?: EmailAttachment[];
+  
+  // Phase 2: Enhanced tracking
+  clientId?: string;
+  emailType: EmailType;
+  priority: EmailPriority;
+  
   createdAt: Timestamp;
   updatedAt: Timestamp;
+}
+
+// ==================== PHASE 2: SCHEDULED EMAIL TYPES ====================
+
+export interface ScheduledEmail {
+  id: string;
+  userId: string;
+  
+  // Email Configuration
+  emailType: EmailType;
+  templateId: string;
+  templateVersion?: number;
+  
+  // Recipients and Content
+  recipientEmail: string;
+  subject: string;
+  emailData: EmailData;
+  
+  // Scheduling
+  scheduledFor: Timestamp;
+  timezone: string;
+  priority: EmailPriority;
+  
+  // Status and Processing
+  status: ScheduledEmailStatus;
+  retryCount: number;
+  maxRetries: number;
+  lastAttempt?: Timestamp;
+  nextAttempt?: Timestamp;
+  
+  // Relationships
+  invoiceId?: string;
+  clientId?: string;
+  campaignId?: string;
+  
+  // Error Handling
+  errorMessage?: string;
+  errorDetails?: {
+    code: string;
+    message: string;
+    timestamp: Timestamp;
+  }[];
+  
+  // Metadata
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  processedAt?: Timestamp;
+}
+
+export interface EmailQueue {
+  id: string;
+  userId: string;
+  scheduledEmailId: string;
+  priority: EmailPriority;
+  status: 'queued' | 'processing' | 'completed' | 'failed';
+  queuedAt: Timestamp;
+  processedAt?: Timestamp;
+  processingNode?: string; // For distributed processing
+}
+
+// ==================== PHASE 2: EMAIL ANALYTICS TYPES ====================
+
+export interface EmailAnalytics {
+  id: string;
+  userId: string;
+  emailHistoryId: string;
+  
+  // Email Identification
+  emailType: EmailType;
+  templateId: string;
+  templateVersion?: number;
+  recipientEmail: string;
+  
+  // Timing Analytics
+  sentAt: Timestamp;
+  deliveredAt?: Timestamp;
+  openedAt?: Timestamp;
+  firstOpenedAt?: Timestamp;
+  lastOpenedAt?: Timestamp;
+  clickedAt?: Timestamp;
+  firstClickedAt?: Timestamp;
+  lastClickedAt?: Timestamp;
+  
+  // Engagement Metrics
+  openCount: number;
+  clickCount: number;
+  timesToOpen: number[];
+  timesToClick: number[];
+  
+  // Device and Client Info
+  userAgent?: string;
+  deviceType?: 'desktop' | 'mobile' | 'tablet';
+  emailClient?: string;
+  operatingSystem?: string;
+  
+  // Geographic Data
+  country?: string;
+  city?: string;
+  ipAddress?: string;
+  
+  // Deliverability
+  bounced: boolean;
+  bounceReason?: string;
+  bounceType?: 'hard' | 'soft';
+  spamComplaint: boolean;
+  unsubscribed: boolean;
+  
+  // Relationships
+  invoiceId?: string;
+  clientId?: string;
+  
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+}
+
+export interface EmailCampaign {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  
+  // Campaign Configuration
+  emailType: EmailType;
+  templateId: string;
+  templateVersion?: number;
+  
+  // Targeting
+  recipientList: string[]; // Email addresses
+  clientIds?: string[]; // Client IDs for targeted campaigns
+  
+  // Scheduling
+  scheduledFor?: Timestamp;
+  timezone: string;
+  
+  // Status
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'completed' | 'cancelled';
+  totalRecipients: number;
+  sentCount: number;
+  deliveredCount: number;
+  failedCount: number;
+  
+  // Campaign Analytics
+  analytics: {
+    openRate: number;
+    clickRate: number;
+    bounceRate: number;
+    unsubscribeRate: number;
+    totalOpens: number;
+    totalClicks: number;
+    totalBounces: number;
+    totalUnsubscribes: number;
+  };
+  
+  // Metadata
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
+  startedAt?: Timestamp;
+  completedAt?: Timestamp;
+}
+
+export interface EmailReport {
+  id: string;
+  userId: string;
+  reportType: 'daily' | 'weekly' | 'monthly' | 'custom';
+  
+  // Report Period
+  startDate: Timestamp;
+  endDate: Timestamp;
+  
+  // Overall Metrics
+  totalEmailsSent: number;
+  totalEmailsDelivered: number;
+  totalEmailsOpened: number;
+  totalEmailsClicked: number;
+  totalEmailsBounced: number;
+  
+  // Calculated Rates
+  deliveryRate: number;
+  openRate: number;
+  clickRate: number;
+  bounceRate: number;
+  
+  // Breakdown by Email Type
+  metricsByType: {
+    [emailType in EmailType]?: {
+      sent: number;
+      delivered: number;
+      opened: number;
+      clicked: number;
+      bounced: number;
+      deliveryRate: number;
+      openRate: number;
+      clickRate: number;
+      bounceRate: number;
+    };
+  };
+  
+  // Template Performance
+  topPerformingTemplates: Array<{
+    templateId: string;
+    templateName: string;
+    sent: number;
+    openRate: number;
+    clickRate: number;
+  }>;
+  
+  // Client Performance
+  topEngagingClients: Array<{
+    clientId: string;
+    clientName: string;
+    emailsSent: number;
+    openRate: number;
+    clickRate: number;
+  }>;
+  
+  // Generated Data
+  generatedAt: Timestamp;
+  generatedBy: string;
 }
 
 // ==================== PAYMENT TYPES ====================
@@ -565,9 +836,9 @@ export interface GoalMilestone {
 
 export interface AuditLog {
   id: string;
-  entityType: 'client' | 'transaction' | 'invoice' | 'category' | 'goal';
+  entityType: 'client' | 'transaction' | 'invoice' | 'category' | 'goal' | 'email' | 'template';
   entityId: string;
-  action: 'create' | 'update' | 'delete' | 'send' | 'pay' | 'cancel';
+  action: 'create' | 'update' | 'delete' | 'send' | 'pay' | 'cancel' | 'schedule' | 'process';
   
   // Change Details
   changes?: {
@@ -614,4 +885,27 @@ export interface TransactionFormData {
   vendor?: string;
   paymentMethod?: string;
   isTaxDeductible?: boolean;
+}
+
+export interface ScheduledEmailFormData {
+  emailType: EmailType;
+  templateId: string;
+  recipientEmail: string;
+  scheduledFor: Date;
+  priority: EmailPriority;
+  invoiceId?: string;
+  clientId?: string;
+  customSubject?: string;
+  customVariables?: Record<string, string>;
+}
+
+export interface EmailCampaignFormData {
+  name: string;
+  description?: string;
+  emailType: EmailType;
+  templateId: string;
+  recipientEmails: string[];
+  clientIds?: string[];
+  scheduledFor?: Date;
+  timezone: string;
 }
