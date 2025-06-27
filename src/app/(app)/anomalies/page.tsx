@@ -85,7 +85,7 @@ export default function AnomaliesPage() {
               onChange={(e) => handleInputChange('averageSpendingByCategory', e.target.value)}
             />
           </div>
-          <Button onClick={handleSubmit} disabled={isLoading} variant="primary">
+          <Button onClick={handleSubmit} disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Detect Anomalies
           </Button>

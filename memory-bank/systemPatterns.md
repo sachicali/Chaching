@@ -102,7 +102,90 @@ interface AuthenticatedContextType {
 **Framework**: 8 sprints across 4 phases with quality gates
 **Implementation**: Weekly reviews and continuous documentation updates
 
-### 6. Component Organization Pattern
+### 6. Expense Categorization Pattern (ENHANCED)
+**Decision**: Auto-categorization engine with ML-style confidence scoring
+**Pattern**: Smart categorization with 19 professional default categories
+**Implementation**: Rule-based pattern matching with confidence metrics
+**Files**: [`src/services/category.service.ts`](src/services/category.service.ts:1), [`src/contexts/CategoryContext.tsx`](src/contexts/CategoryContext.tsx:1)
+
+**Categorization Engine Pattern**:
+```typescript
+interface CategorySuggestion {
+  categoryId: string;
+  categoryName: string;
+  confidence: number; // 0-100 confidence score
+  reason: string; // Why this category was suggested
+}
+
+const suggestCategory = (description: string, amount: number): CategorySuggestion => {
+  // ML-style pattern matching with confidence scoring
+  // Professional categories optimized for freelancers
+};
+```
+
+### 7. Invoice Management Architecture Pattern (NEW - PRODUCTION-READY)
+**Decision**: Complete invoice lifecycle management with professional UI components
+**Pattern**: Service-Context-Component architecture for complex invoice workflows
+**Implementation**: React Hook Form + Zod validation with real-time calculations
+**Files**:
+- [`src/services/invoice.service.ts`](src/services/invoice.service.ts:1) - Business logic layer
+- [`src/contexts/InvoiceContext.tsx`](src/contexts/InvoiceContext.tsx:1) - State management
+- [`src/components/invoices/InvoiceForm.tsx`](src/components/invoices/InvoiceForm.tsx:1) - Creation UI
+- [`src/components/invoices/InvoiceDetail.tsx`](src/components/invoices/InvoiceDetail.tsx:1) - Viewing UI
+- [`src/components/invoices/PaymentForm.tsx`](src/components/invoices/PaymentForm.tsx:1) - Payment recording
+- [`src/app/(app)/invoices/page.tsx`](src/app/(app)/invoices/page.tsx:1) - Management dashboard
+
+**Invoice Component Architecture Pattern**:
+```typescript
+// Professional invoice form with dynamic calculations
+interface InvoiceFormData {
+  clientId: string;
+  number: string;
+  issueDate: Date;
+  dueDate: Date;
+  items: InvoiceItem[];
+  subtotal: number;
+  taxRate: number;
+  taxAmount: number;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  total: number;
+  notes?: string;
+  terms?: string;
+}
+
+// Real-time calculation pattern for invoice totals
+const calculateInvoiceTotals = (items: InvoiceItem[], taxRate: number, discount: Discount) => {
+  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+  const discountAmount = calculateDiscount(subtotal, discount);
+  const taxableAmount = subtotal - discountAmount;
+  const taxAmount = taxableAmount * (taxRate / 100);
+  const total = taxableAmount + taxAmount;
+  return { subtotal, discountAmount, taxAmount, total };
+};
+```
+
+**Payment Recording Pattern**:
+```typescript
+interface PaymentData {
+  invoiceId: string;
+  amount: number;
+  paymentDate: Date;
+  paymentMethod: 'cash' | 'bank_transfer' | 'credit_card' | 'paypal' | 'gcash' | 'other';
+  referenceNumber?: string;
+  notes?: string;
+}
+
+// Automatic invoice status updates based on payment amount
+const recordPayment = async (paymentData: PaymentData) => {
+  const invoice = await getInvoice(paymentData.invoiceId);
+  const totalPaid = invoice.totalPaid + paymentData.amount;
+  const status = determineInvoiceStatus(totalPaid, invoice.total);
+  await updateInvoiceStatus(paymentData.invoiceId, status, totalPaid);
+};
+```
+
+### 8. Component Organization Pattern
 **Decision**: Feature-based component grouping with shared UI layer
 **Structure**:
 - `components/ui/` - Radix UI + Tailwind base components
