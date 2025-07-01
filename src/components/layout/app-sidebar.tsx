@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -33,6 +32,10 @@ import {
   AlertTriangle,
   Brain,
   LogOut,
+  Mail,
+  Send,
+  Clock,
+  BarChart3,
   DollarSign, // Keep DollarSign
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -48,6 +51,15 @@ const navItems = [
   { href: "/taxes", icon: Calculator, label: "Taxes", tooltip: "Tax Estimation" },
   { href: "/documents", icon: FolderArchive, label: "Documents", tooltip: "Document Vault" },
   { href: "/cashflow", icon: BarChartHorizontalBig, label: "Cash Flow", tooltip: "Cash Flow Forecast" },
+  { href: "/reports", icon: BarChart3, label: "Reports", tooltip: "Financial Reports" },
+];
+
+const emailNavItems = [
+  { href: "/emails", icon: Mail, label: "Email Hub", tooltip: "Email Management Dashboard" },
+  { href: "/emails/templates", icon: FileText, label: "Templates", tooltip: "Email Templates" },
+  { href: "/emails/history", icon: Send, label: "History", tooltip: "Email History" },
+  { href: "/emails/scheduled", icon: Clock, label: "Scheduled", tooltip: "Scheduled Emails" },
+  { href: "/emails/analytics", icon: BarChart3, label: "Analytics", tooltip: "Email Analytics" },
 ];
 
 const aiToolsNavItems = [
@@ -86,6 +98,29 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   asChild
                   isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
+                  tooltip={item.tooltip}
+                  className={cn(pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
+                >
+                  <a>
+                    <item.icon />
+                    <span>{item.label}</span>
+                  </a>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+
+        <div className="mt-4 p-2 group-data-[collapsible=icon]:hidden">
+          <p className="text-sm font-medium text-sidebar-foreground/70">Email Automation</p>
+        </div>
+        <SidebarMenu>
+          {emailNavItems.map((item) => (
+            <SidebarMenuItem key={item.href}>
+              <Link href={item.href} passHref legacyBehavior>
+                <SidebarMenuButton
+                  asChild
+                  isActive={pathname === item.href || (item.href !== "/emails" && pathname.startsWith(item.href))}
                   tooltip={item.tooltip}
                   className={cn(pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
                 >
