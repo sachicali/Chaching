@@ -9,29 +9,53 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-2xl border bg-gradient-to-b from-card to-card/95",
-      "shadow-[0_2px_8px_rgba(0,0,0,0.04)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.3)]",
-      "hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)]",
+      "rounded-2xl border border-border/50 bg-card",
+      "shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
       "transition-all duration-300 ease-out",
-      "hover:border-primary/20 hover:-translate-y-1",
+      "hover:border-primary/50 hover:shadow-[0_12px_48px_rgba(0,0,0,0.12)] hover:shadow-primary/10 hover:-translate-y-0.5",
       "relative overflow-hidden group",
-      "backdrop-blur-sm",
+      "before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/[0.08] before:via-white/[0.02] before:to-transparent before:pointer-events-none",
+      "after:absolute after:inset-0 after:bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] after:from-primary/[0.04] after:via-transparent after:to-transparent after:pointer-events-none",
       className
     )}
     {...props}
   >
-    {/* Subtle texture overlay */}
-    <div className="absolute inset-0 opacity-[0.015] dark:opacity-[0.02] pointer-events-none">
-      <svg width="100%" height="100%">
-        <pattern id="card-pattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-          <circle cx="20" cy="20" r="1" fill="currentColor" />
-        </pattern>
-        <rect width="100%" height="100%" fill="url(#card-pattern)" />
+    {/* Grainy texture overlay */}
+    <div className="absolute inset-0 opacity-[0.04] pointer-events-none mix-blend-overlay">
+      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="grainyFilter">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.95"
+              numOctaves="4"
+              result="noise"
+              seed="1"
+            />
+            <feColorMatrix in="noise" type="saturate" values="0"/>
+          </filter>
+        </defs>
+        <rect width="100%" height="100%" filter="url(#grainyFilter)" opacity="1"/>
       </svg>
     </div>
-    {/* Gradient overlay on hover */}
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-    {props.children}
+    
+    {/* Additional film grain effect */}
+    <div 
+      className="absolute inset-0 opacity-[0.05] pointer-events-none mix-blend-multiply"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter' x='0%25' y='0%25' width='100%25' height='100%25'%3E%3CfeTurbulence baseFrequency='0.98' seed='5' numOctaves='2' result='turbulence'/%3E%3CfeColorMatrix in='turbulence' type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'repeat',
+        backgroundSize: '128px 128px'
+      }}
+    />
+    
+    {/* Inner border for depth */}
+    <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/10 pointer-events-none" />
+    
+    {/* Content with proper z-index */}
+    <div className="relative z-10">
+      {props.children}
+    </div>
   </div>
 ))
 Card.displayName = "Card"

@@ -86,11 +86,11 @@ const aiToolsNavItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const { isMobile, open } = useSidebar();
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      await logout();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -109,75 +109,75 @@ export function AppSidebar() {
   return (
     <TooltipProvider delayDuration={0}>
       <Sidebar collapsible={isMobile ? "offcanvas" : "icon"} className="border-r border-border/40 bg-gradient-to-b from-sidebar-background to-sidebar-background/95 shadow-xl">
-      <SidebarHeader className="h-20 flex items-center justify-center relative">
-        <div className="w-full px-4">
-          {/* Expanded State */}
-          <div className={cn(
-            "flex items-center transition-all duration-300",
-            open ? "opacity-100" : "opacity-0 pointer-events-none absolute"
-          )}>
-            <div className="relative mr-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-0.5 shadow-lg shadow-primary/20">
-                <div className="w-full h-full rounded-2xl bg-background/90 flex items-center justify-center">
-                  <DollarSign className="h-6 w-6 text-primary" />
-                </div>
+      {/* Toggle Button - Outside and above the header */}
+      <div className="p-3 border-b border-border/40">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <SidebarTrigger className="h-9 w-full rounded-lg bg-muted/50 hover:bg-primary/10 hover:border-primary/30 border border-transparent transition-all duration-200 flex items-center justify-center gap-2 group">
+              <div className="relative w-4 h-4">
+                <ChevronLeft className={cn(
+                  "absolute inset-0 h-4 w-4 transition-all duration-300 text-muted-foreground group-hover:text-primary",
+                  open ? "opacity-100 rotate-0" : "opacity-0 -rotate-180"
+                )} />
+                <ChevronRight className={cn(
+                  "absolute inset-0 h-4 w-4 transition-all duration-300 text-muted-foreground group-hover:text-primary",
+                  !open ? "opacity-100 rotate-0" : "opacity-0 rotate-180"
+                )} />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
-            </div>
-            <div className="flex-1">
-              <h1 className="text-xl font-bold text-foreground">Chaching</h1>
-              <p className="text-xs text-muted-foreground">Financial Management</p>
-            </div>
-          </div>
+              <span className={cn(
+                "text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors",
+                !open && "hidden"
+              )}>
+                Collapse Menu
+              </span>
+            </SidebarTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="right" className={!open ? "flex" : "hidden"}>
+            {open ? "Collapse sidebar" : "Expand sidebar"}
+          </TooltipContent>
+        </Tooltip>
+      </div>
 
-          {/* Collapsed State */}
+      <SidebarHeader>
+        {/* Logo Section */}
+        <div className="p-6 pb-4">
           <div className={cn(
-            "flex items-center justify-center transition-all duration-300",
-            !open ? "opacity-100" : "opacity-0 pointer-events-none absolute"
+            "flex items-center gap-3 transition-all duration-300",
+            !open && "justify-center"
           )}>
+            {/* Logo */}
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="relative cursor-pointer group">
-                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                <div className="relative flex-shrink-0 cursor-pointer group">
+                  <div className={cn(
+                    "rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 group-hover:scale-105",
+                    open ? "w-12 h-12" : "w-10 h-10"
+                  )}>
                     <div className="w-full h-full rounded-2xl bg-background/90 flex items-center justify-center">
-                      <DollarSign className="h-7 w-7 text-primary" />
+                      <DollarSign className={cn(
+                        "text-primary transition-all duration-300",
+                        open ? "h-6 w-6" : "h-5 w-5"
+                      )} />
                     </div>
                   </div>
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="right">
+              <TooltipContent side="right" className={!open ? "flex" : "hidden"}>
                 <div className="font-semibold">Chaching</div>
                 <div className="text-xs text-muted-foreground">Financial Management</div>
               </TooltipContent>
             </Tooltip>
-          </div>
-        </div>
 
-        {/* Floating Toggle Button */}
-        <div className={cn(
-          "absolute -right-4 top-1/2 -translate-y-1/2 z-50 transition-all duration-300",
-          !open && "-right-3"
-        )}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <SidebarTrigger className="w-8 h-8 rounded-lg bg-background border border-border shadow-md hover:shadow-lg hover:bg-accent transition-all duration-200 flex items-center justify-center group">
-                <div className="relative w-4 h-4">
-                  <ChevronLeft className={cn(
-                    "absolute inset-0 h-4 w-4 transition-all duration-300",
-                    open ? "opacity-100 rotate-0" : "opacity-0 -rotate-180"
-                  )} />
-                  <ChevronRight className={cn(
-                    "absolute inset-0 h-4 w-4 transition-all duration-300",
-                    !open ? "opacity-100 rotate-0" : "opacity-0 rotate-180"
-                  )} />
-                </div>
-              </SidebarTrigger>
-            </TooltipTrigger>
-            <TooltipContent side="right">
-              {open ? "Collapse sidebar" : "Expand sidebar"}
-            </TooltipContent>
-          </Tooltip>
+            {/* Text - Hidden when collapsed */}
+            <div className={cn(
+              "flex flex-col transition-all duration-300",
+              !open && "hidden"
+            )}>
+              <h1 className="text-xl font-bold text-foreground">Chaching</h1>
+              <p className="text-xs text-muted-foreground">Financial Management</p>
+            </div>
+          </div>
         </div>
       </SidebarHeader>
       
@@ -192,31 +192,29 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.href}>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Link href={item.href} passHref legacyBehavior>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          className={cn(
-                            "relative h-11 rounded-lg transition-all duration-200 group",
-                            "hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:shadow-sm",
-                            isActive && "bg-gradient-to-r from-primary/10 to-primary/15 shadow-sm text-primary"
-                          )}
-                        >
-                          <a className="flex items-center gap-3 px-3">
-                            <item.icon className={cn(
-                              "h-5 w-5 transition-all duration-200",
-                              isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/70"
-                            )} />
-                            <span className={cn(
-                              "font-medium transition-all duration-200",
-                              isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
-                              "group-data-[collapsible=icon]:sr-only"
-                            )}>
-                              {item.label}
-                            </span>
-                          </a>
-                        </SidebarMenuButton>
-                      </Link>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        className={cn(
+                          "relative h-11 rounded-lg transition-all duration-200 group",
+                          "hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:shadow-sm",
+                          isActive && "bg-gradient-to-r from-primary/10 to-primary/15 shadow-sm text-primary"
+                        )}
+                      >
+                        <Link href={item.href} className="flex items-center gap-3 px-3">
+                          <item.icon className={cn(
+                            "h-5 w-5 transition-all duration-200",
+                            isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/70"
+                          )} />
+                          <span className={cn(
+                            "font-medium transition-all duration-200",
+                            isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                            "group-data-[collapsible=icon]:sr-only"
+                          )}>
+                            {item.label}
+                          </span>
+                        </Link>
+                      </SidebarMenuButton>
                     </TooltipTrigger>
                     <TooltipContent side="right" className="group-data-[collapsible=icon]:flex hidden">
                       {item.label}
@@ -241,31 +239,29 @@ export function AppSidebar() {
                 const isActive = pathname === item.href || (item.href !== "/emails" && pathname.startsWith(item.href));
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <Link href={item.href} passHref legacyBehavior>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.tooltip}
-                        className={cn(
-                          "relative h-11 rounded-lg transition-all duration-200 group",
-                          "hover:bg-muted/50",
-                          isActive && "bg-emerald-500/10 border-l-2 border-emerald-500"
-                        )}
-                      >
-                        <a className="flex items-center gap-3 px-3">
-                          <item.icon className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            isActive ? "text-emerald-500" : "text-muted-foreground"
-                          )} />
-                          <span className={cn(
-                            "font-medium transition-colors duration-200",
-                            isActive ? "text-foreground" : "text-muted-foreground"
-                          )}>
-                            {item.label}
-                          </span>
-                        </a>
-                      </SidebarMenuButton>
-                    </Link>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.tooltip}
+                      className={cn(
+                        "relative h-11 rounded-lg transition-all duration-200 group",
+                        "hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:shadow-sm",
+                        isActive && "bg-gradient-to-r from-primary/10 to-primary/15 shadow-sm text-primary"
+                      )}
+                    >
+                      <Link href={item.href} className="flex items-center gap-3 px-3">
+                        <item.icon className={cn(
+                          "h-5 w-5 transition-colors duration-200",
+                          isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/70"
+                        )} />
+                        <span className={cn(
+                          "font-medium transition-colors duration-200",
+                          isActive ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {item.label}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}
@@ -286,31 +282,29 @@ export function AppSidebar() {
                 const isActive = pathname === item.href;
                 return (
                   <SidebarMenuItem key={item.href}>
-                    <Link href={item.href} passHref legacyBehavior>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={isActive}
-                        tooltip={item.tooltip}
-                        className={cn(
-                          "relative h-11 rounded-lg transition-all duration-200 group",
-                          "hover:bg-muted/50",
-                          isActive && "bg-emerald-500/10 border-l-2 border-emerald-500"
-                        )}
-                      >
-                        <a className="flex items-center gap-3 px-3">
-                          <item.icon className={cn(
-                            "h-5 w-5 transition-colors duration-200",
-                            isActive ? "text-emerald-500" : "text-muted-foreground"
-                          )} />
-                          <span className={cn(
-                            "font-medium transition-colors duration-200",
-                            isActive ? "text-foreground" : "text-muted-foreground"
-                          )}>
-                            {item.label}
-                          </span>
-                        </a>
-                      </SidebarMenuButton>
-                    </Link>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.tooltip}
+                      className={cn(
+                        "relative h-11 rounded-lg transition-all duration-200 group",
+                        "hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:shadow-sm",
+                        isActive && "bg-gradient-to-r from-primary/10 to-primary/15 shadow-sm text-primary"
+                      )}
+                    >
+                      <Link href={item.href} className="flex items-center gap-3 px-3">
+                        <item.icon className={cn(
+                          "h-5 w-5 transition-colors duration-200",
+                          isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/70"
+                        )} />
+                        <span className={cn(
+                          "font-medium transition-colors duration-200",
+                          isActive ? "text-foreground" : "text-muted-foreground"
+                        )}>
+                          {item.label}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
               })}

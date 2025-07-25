@@ -15,8 +15,8 @@
     --popover: 0 0% 100%; /* White popovers */
     --popover-foreground: 0 0% 9%; /* Rich black text */
 
-    /* Primary accent - Sophisticated indigo */
-    --primary: 239 84% 67%; /* Premium indigo: #6366F1 */
+    /* Primary accent - ChaChing green */
+    --primary: 162 100% 40%; /* ChaChing green: #00C896 */
     --primary-foreground: 0 0% 100%; /* White text on accent */
 
     /* Secondary - Subtle grey */
@@ -54,26 +54,26 @@
     /* Sidebar specific - Light mode */
     --sidebar-background: 0 0% 98%; /* Near white: #FAFAFA */
     --sidebar-foreground: 0 0% 40%; /* Muted text */
-    --sidebar-primary: 239 84% 67%; /* Indigo */
+    --sidebar-primary: 162 100% 40%; /* ChaChing green */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
     --sidebar-accent: 0 0% 94%; /* Light grey hover */
     --sidebar-accent-foreground: 0 0% 9%; /* Black */
     --sidebar-border: 0 0% 92%; /* Subtle border */
-    --sidebar-ring: 239 84% 67%; /* Indigo focus */
+    --sidebar-ring: 162 100% 40%; /* ChaChing green focus */
   }
 
   .dark {
     /* Dark mode - Sophisticated black theme */
-    --background: 0 0% 3.9%; /* Near black: #0A0A0A */
+    --background: 0 0% 7%; /* Dark background: #121212 */
     --foreground: 0 0% 95%; /* Off white: #F2F2F2 */
 
-    --card: 0 0% 7%; /* Card background: #121212 */
+    --card: 0 0% 12%; /* Card background: #1F1F1F */
     --card-foreground: 0 0% 95%; /* Off white text */
 
     --popover: 0 0% 7%; /* Popover background */
     --popover-foreground: 0 0% 95%; /* Off white text */
 
-    --primary: 239 84% 67%; /* Premium indigo: #6366F1 */
+    --primary: 162 100% 40%; /* ChaChing green: #00C896 */
     --primary-foreground: 0 0% 100%; /* White text */
 
     --secondary: 0 0% 12%; /* Subtle dark: #1F1F1F */
@@ -106,12 +106,12 @@
 
     --sidebar-background: 0 0% 5%; /* Darker sidebar: #0D0D0D */
     --sidebar-foreground: 0 0% 60%; /* Muted text */
-    --sidebar-primary: 239 84% 67%; /* Indigo */
+    --sidebar-primary: 162 100% 40%; /* ChaChing green */
     --sidebar-primary-foreground: 0 0% 100%; /* White */
     --sidebar-accent: 0 0% 12%; /* Hover state */
     --sidebar-accent-foreground: 0 0% 95%; /* Off white */
     --sidebar-border: 0 0% 15%; /* Subtle border */
-    --sidebar-ring: 239 84% 67%; /* Indigo focus */
+    --sidebar-ring: 162 100% 40%; /* ChaChing green focus */
   }
 }
 

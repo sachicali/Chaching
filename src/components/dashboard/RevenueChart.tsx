@@ -143,7 +143,7 @@ export function RevenueChart({
           </p>
           <div className="flex gap-3">
             <Link href="/income">
-              <Button className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all duration-200">
+              <Button className="rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200">
                 Add Income
               </Button>
             </Link>
@@ -234,10 +234,10 @@ export function RevenueChart({
               <Line 
                 type="monotone" 
                 dataKey="income" 
-                stroke="rgb(34, 197, 94)" 
+                stroke="hsl(var(--primary))" 
                 strokeWidth={3} 
                 dot={false} 
-                activeDot={{ r: 6, fill: "rgb(34, 197, 94)", strokeWidth: 2, stroke: "white" }} 
+                activeDot={{ r: 6, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "white" }} 
                 name="Income"
               />
               

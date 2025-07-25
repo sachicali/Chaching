@@ -115,6 +115,92 @@ bun run genkit:watch    # Start Genkit with file watching
 - Use bun for package management and script execution
 - Follow existing code patterns and component structure
 
+## UI/UX Design System
+
+### Brand Colors
+- **Primary**: ChaChing Green (#00C896) - Used for primary actions, hover states, and brand accents
+- **Background (Dark)**: #121212 - Main app background
+- **Card Background**: #1F1F1F - Elevated surfaces
+- **Text**: Off-white (#F2F2F2) on dark, Rich black (#171717) on light
+- **Accent**: Consistent green hover effects across all interactive elements
+
+### Component Styling Philosophy
+Our design system emphasizes **texture, depth, and premium feel** through:
+
+1. **Grainy Texture**: Subtle film grain overlay on all cards for tactile quality
+2. **Layered Depth**: Multiple gradient overlays and shadows for dimensionality
+3. **Smooth Interactions**: 300ms transitions with easing for all hover states
+4. **Consistent Hover**: All interactive elements use ChaChing green (#00C896) on hover
+
+### Card Component Design
+The base Card component (`src/components/ui/card.tsx`) features:
+
+```tsx
+// Default state includes:
+- Border: border-border/50 (50% opacity for subtlety)
+- Shadow: shadow-[0_8px_32px_rgba(0,0,0,0.08)] (deep, soft shadow)
+- Gradient overlays: 
+  - White gradient from top-left (8% → 2% → transparent)
+  - Primary color radial gradient from top-right (4% opacity)
+- Grainy texture: Two layers of SVG noise filters
+  - feTurbulence filter at 4% opacity
+  - Film grain pattern at 5% opacity
+- Inner border: ring-1 ring-inset ring-white/10 for depth
+
+// Hover state:
+- Border transitions to primary/50 (ChaChing green)
+- Shadow increases and gains color tint
+- Subtle upward movement (-translate-y-0.5)
+```
+
+### Texture Implementation Details
+```css
+/* Grainy texture using SVG filters */
+- Base frequency: 0.95 for fine grain
+- Desaturated noise for neutral appearance
+- Mix blend modes for natural integration
+- Dual-layer approach for authentic film grain feel
+```
+
+### Interactive Elements
+
+#### Floating Action Button (FAB)
+- Expandable design with staggered animations
+- Main button: Gradient background with pulse animation
+- Action buttons: Individual gradients with hover effects
+- Smooth rotation and scale transitions
+
+#### Sidebar
+- Collapsible with icon-only state
+- Toggle button uses muted background with green hover
+- Navigation items: Gradient hover from primary/5 to primary/10
+- Active states: Stronger gradient with primary/10 to primary/15
+
+#### Buttons
+- Primary: ChaChing green gradient with shadow
+- Hover: Increased shadow and subtle scale
+- Active: Scale down (0.98) for tactile feedback
+- All buttons include gradient overlays for depth
+
+### Animation Guidelines
+- **Duration**: 300ms for most transitions, 200ms for quick interactions
+- **Easing**: ease-out for natural movement, cubic-bezier(0.4, 0, 0.2, 1) for smooth curves
+- **Hover**: Scale (1.05-1.10), shadow increase, color shifts
+- **Active**: Scale down (0.98) for button press feel
+- **Stagger**: 50ms delays for sequential animations
+
+### Empty States
+- Welcome panel for onboarding with progress tracking
+- Empty state cards with clear CTAs
+- Consistent messaging encouraging user action
+- Visual hierarchy with icons and graduated text sizes
+
+### Dashboard Layout
+- **First-time users**: Welcome panel with checklist and quick actions
+- **Active users**: Full metrics display with real-time data
+- **Responsive grid**: Adapts from mobile to desktop seamlessly
+- **Visual hierarchy**: Clear sections with proper spacing
+
 ## Environment Setup
 - Node.js 18+ (recommended with bun)
 - Firebase CLI for backend development

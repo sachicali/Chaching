@@ -10,7 +10,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { QuickAddButton } from '@/components/layout/quick-add-button';
+import { FloatingActionButton } from '@/components/layout/floating-action-button';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -40,7 +40,7 @@ export default function AppLayout({
                   {children}
                 </div>
               </SidebarInset>
-              <QuickAddButton />
+              <FloatingActionButton />
               <Toaster />
             </SidebarProvider>
           </EmailProvider>
@@ -73,7 +73,6 @@ export default function AppLayout({
                       {children}
                     </div>
                   </SidebarInset>
-                  <QuickAddButton />
                   <Toaster />
                 </SidebarProvider>
               </EmailProvider>
