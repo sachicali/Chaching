@@ -8,7 +8,11 @@ import {
   Timestamp,
   CollectionReference,
   DocumentReference,
-  setDoc 
+  setDoc,
+  query,
+  where,
+  orderBy,
+  limit
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type {
@@ -87,6 +91,88 @@ export const getCurrentTimestamp = (): Timestamp => Timestamp.now();
  */
 export const createDocumentId = (collectionRef: CollectionReference): string => {
   return doc(collectionRef).id;
+};
+
+// ==================== SERVICE HELPER FUNCTIONS ====================
+// These functions are used by the services for consistent collection access
+
+// Client service helpers
+export const getUserClientsRef = (userId: string) => getUserCollections(userId).clients;
+export const getClientRef = (userId: string, clientId: string) => getClientDocument(userId, clientId);
+
+// Transaction service helpers
+export const getUserTransactionsRef = (userId: string) => getUserCollections(userId).transactions;
+export const getTransactionRef = (userId: string, transactionId: string) => getTransactionDocument(userId, transactionId);
+
+// Category service helpers
+export const getUserCategoriesRef = (userId: string) => getUserCollections(userId).categories;
+export const getCategoryRef = (userId: string, categoryId: string) => getCategoryDocument(userId, categoryId);
+
+// Invoice service helpers (using user subcollections for data isolation)
+export const getUserInvoicesRef = (userId: string) => getUserCollections(userId).invoices;
+export const getInvoiceRef = (userId: string, invoiceId: string) => getInvoiceDocument(userId, invoiceId);
+
+// Payment service helpers (using user subcollections for data isolation)
+export const getUserPaymentsRef = (userId: string) => getUserCollections(userId).payments;
+export const getPaymentRef = (userId: string, paymentId: string) => getPaymentDocument(userId, paymentId);
+
+// Goal service helpers
+export const getUserGoalsRef = (userId: string) => getUserCollections(userId).goals;
+export const getGoalRef = (userId: string, goalId: string) => getGoalDocument(userId, goalId);
+
+// ==================== QUERY HELPER FUNCTIONS ====================
+// Pre-built queries for common operations
+
+// Transaction queries
+export const getTransactionsByTypeQuery = (userId: string, type: 'income' | 'expense') => {
+  return query(
+    getUserTransactionsRef(userId),
+    where('type', '==', type),
+    orderBy('date', 'desc')
+  );
+};
+
+export const getTransactionsByClientQuery = (userId: string, clientId: string) => {
+  return query(
+    getUserTransactionsRef(userId),
+    where('clientId', '==', clientId),
+    orderBy('date', 'desc')
+  );
+};
+
+export const getRecentTransactionsQuery = (userId: string, limitCount: number = 10) => {
+  return query(
+    getUserTransactionsRef(userId),
+    orderBy('date', 'desc'),
+    limit(limitCount)
+  );
+};
+
+// Invoice queries
+export const getInvoicesByStatusQuery = (userId: string, status: string) => {
+  return query(
+    getUserInvoicesRef(userId),
+    where('status', '==', status),
+    orderBy('dueDate', 'asc')
+  );
+};
+
+export const getOverdueInvoicesQuery = (userId: string) => {
+  return query(
+    getUserInvoicesRef(userId),
+    where('status', '==', 'sent'),
+    where('dueDate', '<', Timestamp.now()),
+    orderBy('dueDate', 'asc')
+  );
+};
+
+// Client queries
+export const getActiveClientsQuery = (userId: string) => {
+  return query(
+    getUserClientsRef(userId),
+    where('status', '==', 'active'),
+    orderBy('name', 'asc')
+  );
 };
 
 // ==================== SCHEMA INITIALIZATION ====================

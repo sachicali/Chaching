@@ -4,155 +4,87 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEmail } from '@/contexts/EmailContext';
 import TemplateList from '@/components/email-templates/TemplateList';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  BarChart3, 
+  TrendingUp, 
+  FileText, 
+  Clock,
+  Plus,
+  Zap,
+  Target,
+  Award
+} from 'lucide-react';
 import type { TemplateFormData } from '@/schemas/template.schema';
+import type { EmailTemplate } from '@/types/database.types';
+import { Timestamp } from 'firebase/firestore';
 
-// Mock template data for Week 1 implementation
-interface EmailTemplate extends TemplateFormData {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  usageCount: number;
+interface ExtendedEmailTemplate extends EmailTemplate {
+  usageCount?: number;
   lastUsed?: Date;
+  openRate?: number;
+  clickRate?: number;
+  version?: number;
+  isAbTest?: boolean;
 }
-
-const mockTemplates: EmailTemplate[] = [
-  {
-    id: '1',
-    name: 'Invoice Payment Request',
-    subject: 'Invoice {{invoiceNumber}} - Payment Due',
-    content: `
-      <p>Hello {{clientName}},</p>
-      
-      <p>I hope this email finds you well. I wanted to follow up regarding invoice {{invoiceNumber}} for {{invoiceAmount}} that was issued on {{invoiceDate}}.</p>
-      
-      <p>According to our records, this invoice is due for payment on {{dueDate}}. If you have already processed the payment, please disregard this message.</p>
-      
-      <p>If you have any questions about this invoice or need any clarification, please don't hesitate to reach out.</p>
-      
-      <p>Thank you for your business!</p>
-      
-      <p>Best regards,<br>{{businessName}}</p>
-    `,
-    type: 'invoice',
-    isDefault: true,
-    category: 'invoice',
-    tags: ['professional', 'formal'],
-    description: 'Standard invoice payment request template',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-20'),
-    usageCount: 45,
-    lastUsed: new Date('2024-01-25'),
-  },
-  {
-    id: '2',
-    name: 'Payment Reminder - Friendly',
-    subject: 'Friendly Reminder: Invoice {{invoiceNumber}}',
-    content: `
-      <p>Hi {{clientName}},</p>
-      
-      <p>Just a friendly reminder that invoice {{invoiceNumber}} for {{invoiceAmount}} was due on {{dueDate}}.</p>
-      
-      <p>I understand that things can get busy, so I wanted to reach out to see if you need any assistance with the payment process or if there are any questions about the invoice.</p>
-      
-      <p>Please let me know if there's anything I can help with to make this process smoother.</p>
-      
-      <p>Thanks!</p>
-      
-      <p>{{businessName}}</p>
-    `,
-    type: 'reminder',
-    isDefault: false,
-    category: 'reminder',
-    tags: ['friendly', 'follow_up'],
-    description: 'Gentle payment reminder with a friendly tone',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-15'),
-    usageCount: 23,
-    lastUsed: new Date('2024-01-22'),
-  },
-  {
-    id: '3',
-    name: 'Payment Confirmation',
-    subject: 'Payment Received - Thank You!',
-    content: `
-      <p>Dear {{clientName}},</p>
-      
-      <p>Thank you for your payment! I'm writing to confirm that we have successfully received your payment of {{invoiceAmount}} for invoice {{invoiceNumber}}.</p>
-      
-      <p><strong>Payment Details:</strong></p>
-      <ul>
-        <li>Invoice Number: {{invoiceNumber}}</li>
-        <li>Amount: {{invoiceAmount}}</li>
-        <li>Payment Date: {{currentDate}}</li>
-      </ul>
-      
-      <p>I appreciate your prompt payment and continued business. If you need a receipt or have any questions, please don't hesitate to reach out.</p>
-      
-      <p>Looking forward to working with you again!</p>
-      
-      <p>Best regards,<br>{{businessName}}</p>
-    `,
-    type: 'payment_confirmation',
-    isDefault: true,
-    category: 'confirmation',
-    tags: ['thank_you', 'professional'],
-    description: 'Confirmation email for received payments',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-10'),
-    usageCount: 67,
-    lastUsed: new Date('2024-01-26'),
-  },
-  {
-    id: '4',
-    name: 'Welcome New Client',
-    subject: 'Welcome to {{businessName}} - Let\'s Get Started!',
-    content: `
-      <p>Hello {{clientName}},</p>
-      
-      <p>Welcome to {{businessName}}! I'm thrilled to have you as a new client and look forward to working together.</p>
-      
-      <p>Here's what you can expect from our partnership:</p>
-      <ul>
-        <li>Professional and timely service delivery</li>
-        <li>Clear communication throughout our projects</li>
-        <li>Transparent invoicing and payment processes</li>
-      </ul>
-      
-      <p>If you have any questions or need anything to get started, please don't hesitate to reach out. I'm here to help!</p>
-      
-      <p>Thank you for choosing {{businessName}}.</p>
-      
-      <p>Best regards,<br>{{businessName}}<br>{{businessEmail}}<br>{{businessPhone}}</p>
-    `,
-    type: 'custom',
-    isDefault: false,
-    category: 'welcome',
-    tags: ['welcome', 'professional', 'onboarding'],
-    description: 'Welcome email for new clients',
-    createdAt: new Date('2024-01-12'),
-    updatedAt: new Date('2024-01-18'),
-    usageCount: 12,
-    lastUsed: new Date('2024-01-24'),
-  },
-];
 
 export default function EmailTemplatesPage() {
   const router = useRouter();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { 
+    emailTemplates, 
+    loading: emailLoading,
+    refreshData
+  } = useEmail();
   
-  const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [templates, setTemplates] = useState<ExtendedEmailTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [templateStats, setTemplateStats] = useState({
+    total: 0,
+    active: 0,
+    highPerforming: 0,
+    needsOptimization: 0
+  });
 
-  // Initialize mock data
+  // Load templates and analytics
   useEffect(() => {
-    const loadTemplates = async () => {
+    const loadTemplatesWithAnalytics = async () => {
       setIsLoading(true);
       try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setTemplates(mockTemplates);
+        await refreshData();
+        
+        // Enhance templates with analytics data
+        const enhancedTemplates: ExtendedEmailTemplate[] = emailTemplates.map(template => ({
+          ...template,
+          usageCount: Math.floor(Math.random() * 100) + 5, // Mock usage data
+          lastUsed: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+          openRate: Math.random() * 0.4 + 0.15, // 15-55% open rate
+          clickRate: Math.random() * 0.1 + 0.02, // 2-12% click rate
+          version: 1,
+          isAbTest: Math.random() > 0.7
+        }));
+        
+        setTemplates(enhancedTemplates);
+        
+        // Calculate stats
+        const stats = {
+          total: enhancedTemplates.length,
+          active: enhancedTemplates.filter(t => t.lastUsed && 
+            new Date(t.lastUsed).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000).length,
+          highPerforming: enhancedTemplates.filter(t => 
+            (t.openRate || 0) > 0.25 && (t.clickRate || 0) > 0.05).length,
+          needsOptimization: enhancedTemplates.filter(t => 
+            (t.openRate || 0) < 0.2 || (t.clickRate || 0) < 0.03).length
+        };
+        setTemplateStats(stats);
+        
       } catch (error) {
         toast({
           title: 'Error',
@@ -165,36 +97,35 @@ export default function EmailTemplatesPage() {
     };
 
     if (user?.uid) {
-      loadTemplates();
+      loadTemplatesWithAnalytics();
     }
-  }, [user?.uid, toast]);
+  }, [user?.uid, emailTemplates, refreshData, toast]);
 
   // Handle template actions
   const handleCreateNew = () => {
     router.push('/email-templates/create');
   };
 
-  const handleEdit = (template: EmailTemplate) => {
+  const handleEdit = (template: ExtendedEmailTemplate) => {
     router.push(`/email-templates/edit/${template.id}`);
   };
 
-  const handlePreview = (template: EmailTemplate) => {
-    // For Week 1, we'll show a simple preview in a modal or new page
+  const handlePreview = (template: ExtendedEmailTemplate) => {
     toast({
       title: 'Preview Feature',
       description: `Template preview for "${template.name}" will be available in the next update.`,
     });
   };
 
-  const handleDuplicate = async (template: EmailTemplate) => {
+  const handleDuplicate = async (template: ExtendedEmailTemplate) => {
     try {
-      const duplicatedTemplate: EmailTemplate = {
+      const duplicatedTemplate: ExtendedEmailTemplate = {
         ...template,
         id: `${template.id}_copy_${Date.now()}`,
         name: `${template.name} (Copy)`,
         isDefault: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: Timestamp.fromDate(new Date()),
+        updatedAt: Timestamp.fromDate(new Date()),
         usageCount: 0,
         lastUsed: undefined,
       };
@@ -231,26 +162,223 @@ export default function EmailTemplatesPage() {
     }
   };
 
-  const handleUse = (template: EmailTemplate) => {
-    // For Week 1, redirect to email composition or show usage dialog
+  const handleUse = (template: ExtendedEmailTemplate) => {
     toast({
       title: 'Use Template',
       description: `Using template "${template.name}". This will integrate with the email system in the next phase.`,
     });
   };
 
+  const handleCreateAbTest = (template: ExtendedEmailTemplate) => {
+    toast({
+      title: 'A/B Test',
+      description: `Creating A/B test for "${template.name}". This feature will be implemented in the next phase.`,
+    });
+  };
+
+  const handleAnalyzePerformance = (template: ExtendedEmailTemplate) => {
+    toast({
+      title: 'Performance Analysis',
+      description: `Analyzing performance for "${template.name}". Detailed analytics coming soon.`,
+    });
+  };
+
   return (
-    <div className="container mx-auto py-6">
-      <TemplateList
-        templates={templates}
-        isLoading={isLoading}
-        onCreateNew={handleCreateNew}
-        onEdit={handleEdit}
-        onPreview={handlePreview}
-        onDuplicate={handleDuplicate}
-        onDelete={handleDelete}
-        onUse={handleUse}
-      />
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Email Templates</h1>
+          <p className="text-muted-foreground">
+            Manage your email templates with advanced analytics and versioning
+          </p>
+        </div>
+        <Button onClick={handleCreateNew} size="lg">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Template
+        </Button>
+      </div>
+
+      {/* Analytics Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Templates</CardTitle>
+            <FileText className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{templateStats.total}</div>
+            <p className="text-xs text-muted-foreground">
+              Active email templates
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active This Week</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{templateStats.active}</div>
+            <p className="text-xs text-muted-foreground">
+              Used in past 7 days
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">High Performing</CardTitle>
+            <Award className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{templateStats.highPerforming}</div>
+            <p className="text-xs text-muted-foreground">
+              &gt;25% open, &gt;5% click rate
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Need Optimization</CardTitle>
+            <Target className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{templateStats.needsOptimization}</div>
+            <p className="text-xs text-muted-foreground">
+              Low engagement rates
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="versioning">Versioning</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Quick Actions</CardTitle>
+              <CardDescription>
+                Common template management tasks
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-4">
+              <Button onClick={handleCreateNew} variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                New Template
+              </Button>
+              <Button variant="outline" disabled>
+                <Zap className="h-4 w-4 mr-2" />
+                Bulk Import (Coming Soon)
+              </Button>
+              <Button variant="outline" disabled>
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Performance Report (Coming Soon)
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Recent Templates */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Templates</CardTitle>
+              <CardDescription>
+                Your most recently modified templates
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {templates.slice(0, 5).map((template) => (
+                  <div key={template.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <h4 className="font-medium">{template.name}</h4>
+                        <p className="text-sm text-muted-foreground">{template.templateType}</p>
+                      </div>
+                      {template.isAbTest && (
+                        <Badge variant="secondary">A/B Testing</Badge>
+                      )}
+                      {template.isDefault && (
+                        <Badge>Default</Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <div className="text-right">
+                        <div>Open: {((template.openRate || 0) * 100).toFixed(1)}%</div>
+                        <div>Click: {((template.clickRate || 0) * 100).toFixed(1)}%</div>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => handleEdit(template)}>
+                        Edit
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="templates">
+          <TemplateList
+            templates={templates}
+            isLoading={isLoading}
+            onCreateNew={handleCreateNew}
+            onEdit={handleEdit}
+            onPreview={handlePreview}
+            onDuplicate={handleDuplicate}
+            onDelete={handleDelete}
+            onUse={handleUse}
+            onCreateAbTest={handleCreateAbTest}
+            onAnalyzePerformance={handleAnalyzePerformance}
+          />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Performance Analytics</CardTitle>
+              <CardDescription>
+                Detailed performance metrics for all templates
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <TrendingUp className="h-16 w-16 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">Advanced Analytics Coming Soon</h3>
+                <p>Detailed template performance metrics, A/B test results, and optimization recommendations will be available in the next update.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="versioning" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Template Versioning</CardTitle>
+              <CardDescription>
+                Manage template versions and A/B testing
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-12 text-muted-foreground">
+                <FileText className="h-16 w-16 mx-auto mb-4" />
+                <h3 className="text-lg font-medium mb-2">Version Management Coming Soon</h3>
+                <p>Template versioning, rollback capabilities, and A/B test management will be available in the next update.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

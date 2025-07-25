@@ -78,7 +78,7 @@ export default function PredictionsPage() {
               onChange={(e) => handleInputChange('seasonality', e.target.value)}
             />
           </div>
-          <Button onClick={handleSubmit} disabled={isLoading} variant="primary">
+          <Button onClick={handleSubmit} disabled={isLoading} variant="default">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Predict Income
           </Button>

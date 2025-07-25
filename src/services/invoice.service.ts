@@ -30,6 +30,8 @@ import type {
 } from '@/types/database.types';
 import PdfService from './pdf.service';
 import EmailService from './email.service';
+import { exchangeRateService } from './exchange-rate.service';
+import { philippineTaxService } from './philippine-tax.service';
 
 // ==================== CONSTANTS ====================
 
@@ -49,8 +51,9 @@ const DEFAULT_TEMPLATES = {
   PROFESSIONAL: 'professional'
 } as const;
 
-// Philippines tax rate (12% VAT)
-const PHILIPPINES_TAX_RATE = 12;
+// Philippines tax rate (12% VAT) - Enhanced with BIR compliance
+const PHILIPPINES_VAT_RATE = 12;
+const PHILIPPINES_WITHHOLDING_TAX_RATE = 10; // 10% withholding tax for professional services
 
 // Payment terms options
 const PAYMENT_TERMS_OPTIONS = [
@@ -470,7 +473,137 @@ export class InvoiceService {
   }
 
   /**
-   * Record payment for invoice with email confirmation
+   * Get all payments for an invoice
+   */
+  async getInvoicePayments(invoiceId: string): Promise<Payment[]> {
+    try {
+      const q = query(
+        collection(db, COLLECTIONS.PAYMENTS),
+        where('invoiceId', '==', invoiceId),
+        where('userId', '==', this.userId),
+        orderBy('paymentDate', 'desc')
+      );
+
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Payment[];
+
+    } catch (error) {
+      console.error('Error getting invoice payments:', error);
+      throw new Error('Failed to get invoice payments');
+    }
+  }
+
+  /**
+   * Calculate payment summary for an invoice
+   */
+  async calculatePaymentSummary(invoiceId: string): Promise<{
+    totalPaid: number;
+    remainingBalance: number;
+    paymentsCount: number;
+    isFullyPaid: boolean;
+    isPartiallyPaid: boolean;
+    paymentPercentage: number;
+  }> {
+    try {
+      const invoice = await this.getInvoiceById(invoiceId);
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
+
+      const payments = await this.getInvoicePayments(invoiceId);
+      const totalPaid = payments
+        .filter(payment => payment.status === 'completed')
+        .reduce((sum, payment) => sum + payment.amount, 0);
+
+      const remainingBalance = Math.max(0, invoice.total - totalPaid);
+      const isFullyPaid = remainingBalance === 0 && totalPaid > 0;
+      const isPartiallyPaid = totalPaid > 0 && remainingBalance > 0;
+      const paymentPercentage = invoice.total > 0 ? (totalPaid / invoice.total) * 100 : 0;
+
+      return {
+        totalPaid,
+        remainingBalance,
+        paymentsCount: payments.length,
+        isFullyPaid,
+        isPartiallyPaid,
+        paymentPercentage: Math.round(paymentPercentage * 100) / 100
+      };
+
+    } catch (error) {
+      console.error('Error calculating payment summary:', error);
+      throw new Error('Failed to calculate payment summary');
+    }
+  }
+
+  /**
+   * Validate payment amount and business rules
+   */
+  private async validatePayment(invoiceId: string, paymentAmount: number): Promise<{
+    isValid: boolean;
+    error?: string;
+    warnings?: string[];
+  }> {
+    try {
+      const invoice = await this.getInvoiceById(invoiceId);
+      if (!invoice) {
+        return { isValid: false, error: 'Invoice not found' };
+      }
+
+      // Check if invoice can accept payments
+      if (invoice.status === 'cancelled') {
+        return { isValid: false, error: 'Cannot record payment for cancelled invoice' };
+      }
+
+      if (invoice.status === 'draft') {
+        return { 
+          isValid: false, 
+          error: 'Cannot record payment for draft invoice. Please send the invoice first.' 
+        };
+      }
+
+      // Check payment amount
+      if (paymentAmount <= 0) {
+        return { isValid: false, error: 'Payment amount must be greater than zero' };
+      }
+
+      // Calculate current payment status
+      const paymentSummary = await this.calculatePaymentSummary(invoiceId);
+      
+      if (paymentSummary.isFullyPaid) {
+        return { 
+          isValid: false, 
+          error: 'Invoice is already fully paid' 
+        };
+      }
+
+      const warnings: string[] = [];
+
+      // Check for overpayment
+      if (paymentAmount > paymentSummary.remainingBalance) {
+        warnings.push(
+          `Payment amount (${paymentAmount}) exceeds remaining balance (${paymentSummary.remainingBalance}). This will result in overpayment.`
+        );
+      }
+
+      // Check for duplicate payments (if reference provided)
+      // This would require additional logic to check payment references
+
+      return {
+        isValid: true,
+        warnings: warnings.length > 0 ? warnings : undefined
+      };
+
+    } catch (error) {
+      console.error('Error validating payment:', error);
+      return { isValid: false, error: 'Failed to validate payment' };
+    }
+  }
+
+  /**
+   * Record payment for invoice with enhanced partial payment handling
    */
   async recordPayment(invoiceId: string, paymentData: {
     amount: number;
@@ -479,14 +612,32 @@ export class InvoiceService {
     reference?: string;
     notes?: string;
     sendConfirmationEmail?: boolean;
-  }): Promise<{ invoice: Invoice; payment: Payment; transactionId?: string }> {
+    allowOverpayment?: boolean;
+  }): Promise<{ invoice: Invoice; payment: Payment; transactionId?: string; warnings?: string[] }> {
     try {
+      // Validate payment
+      const validation = await this.validatePayment(invoiceId, paymentData.amount);
+      if (!validation.isValid) {
+        throw new Error(validation.error);
+      }
+
+      // Check for overpayment if not explicitly allowed
+      if (!paymentData.allowOverpayment && validation.warnings?.some(w => w.includes('overpayment'))) {
+        throw new Error('Payment amount exceeds remaining balance. Set allowOverpayment to true to proceed.');
+      }
+
       const invoice = await this.getInvoiceById(invoiceId);
       if (!invoice) {
         throw new Error('Invoice not found');
       }
 
+      // Get current payment summary
+      const paymentSummary = await this.calculatePaymentSummary(invoiceId);
+
       const batch = writeBatch(db);
+
+      // Convert payment amount to PHP using real-time rates
+      const conversionResult = await this.convertCurrency(paymentData.amount, invoice.currency);
 
       // Create payment record
       const paymentId = doc(collection(db, COLLECTIONS.PAYMENTS)).id;
@@ -494,10 +645,8 @@ export class InvoiceService {
         invoiceId,
         amount: paymentData.amount,
         currency: invoice.currency,
-        amountPHP: invoice.currency !== 'PHP' && invoice.exchangeRate 
-          ? paymentData.amount * invoice.exchangeRate 
-          : paymentData.amount,
-        exchangeRate: invoice.exchangeRate,
+        amountPHP: conversionResult.totalPHP,
+        exchangeRate: conversionResult.exchangeRate,
         paymentDate: Timestamp.fromDate(paymentData.paymentDate),
         paymentMethod: paymentData.paymentMethod,
         reference: paymentData.reference,
@@ -514,12 +663,31 @@ export class InvoiceService {
       const paymentRef = doc(db, COLLECTIONS.PAYMENTS, paymentId);
       batch.set(paymentRef, payment);
 
-      // Update invoice status
+      // Calculate new totals after this payment
+      const newTotalPaid = paymentSummary.totalPaid + paymentData.amount;
+      const newRemainingBalance = Math.max(0, invoice.total - newTotalPaid);
+      const isNowFullyPaid = newRemainingBalance === 0;
+      const isNowPartiallyPaid = newTotalPaid > 0 && newRemainingBalance > 0;
+
+      // Determine new invoice status
+      let newStatus: Invoice['status'] = invoice.status;
+      if (isNowFullyPaid) {
+        newStatus = 'paid';
+      } else if (isNowPartiallyPaid && invoice.status !== 'paid') {
+        // Add partially_paid status if not already paid
+        newStatus = invoice.status === 'overdue' ? 'overdue' : 'viewed'; // Keep overdue status if applicable
+      }
+
+      // Update invoice status with enhanced partial payment tracking
       const invoiceUpdates: Partial<Invoice> = {
-        status: paymentData.amount >= invoice.total ? 'paid' : invoice.status,
-        paidAt: paymentData.amount >= invoice.total ? Timestamp.fromDate(paymentData.paymentDate) : undefined,
+        status: newStatus,
+        paidAt: isNowFullyPaid ? Timestamp.fromDate(paymentData.paymentDate) : undefined,
         paymentRecordedAt: Timestamp.now(),
-        updatedAt: Timestamp.now()
+        updatedAt: Timestamp.now(),
+        // Add payment tracking fields
+        totalPaid: newTotalPaid,
+        remainingBalance: newRemainingBalance,
+        paymentPercentage: invoice.total > 0 ? Math.round((newTotalPaid / invoice.total) * 10000) / 100 : 0
       };
 
       // Update invoice in batch
@@ -579,7 +747,7 @@ export class InvoiceService {
         }
       }
 
-      // Return updated data
+      // Return updated data with warnings
       const updatedInvoice = {
         ...invoice,
         ...invoiceUpdates
@@ -588,12 +756,13 @@ export class InvoiceService {
       return {
         invoice: updatedInvoice,
         payment: { id: paymentId, ...payment } as Payment,
-        transactionId
+        transactionId,
+        warnings: validation.warnings
       };
 
     } catch (error) {
       console.error('Error recording payment:', error);
-      throw new Error('Failed to record payment');
+      throw new Error(`Failed to record payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -645,12 +814,17 @@ export class InvoiceService {
   }
 
   /**
-   * Calculate invoice totals
+   * Calculate invoice totals with BIR-compliant tax calculations
    */
   private calculateInvoiceTotals(
     lineItems: InvoiceLineItem[],
     taxRate: number,
-    discount?: { type: 'percentage' | 'fixed'; value: number }
+    discount?: { type: 'percentage' | 'fixed'; value: number },
+    options?: {
+      isVatRegistered?: boolean;
+      includeWithholdingTax?: boolean;
+      clientType?: 'individual' | 'business';
+    }
   ) {
     const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
     
@@ -662,19 +836,47 @@ export class InvoiceService {
     }
 
     const discountedSubtotal = Math.max(0, subtotal - discountAmount);
-    const taxAmount = discountedSubtotal * (taxRate / 100);
+
+    // Enhanced tax calculations based on Philippine BIR requirements
+    let taxAmount = 0;
+    let withholdingTaxAmount = 0;
+    const vatExclusiveAmount = discountedSubtotal;
+
+    if (options?.isVatRegistered) {
+      // VAT-registered: Add 12% VAT
+      taxAmount = discountedSubtotal * (PHILIPPINES_VAT_RATE / 100);
+    } else {
+      // Use provided tax rate (could be percentage tax for VAT-exempt)
+      taxAmount = discountedSubtotal * (taxRate / 100);
+    }
+
+    // Calculate withholding tax if applicable (for business clients)
+    if (options?.includeWithholdingTax && options?.clientType === 'business') {
+      withholdingTaxAmount = discountedSubtotal * (PHILIPPINES_WITHHOLDING_TAX_RATE / 100);
+    }
+
     const total = discountedSubtotal + taxAmount;
+    const netAmountDue = total - withholdingTaxAmount;
 
     return {
       subtotal,
       discountAmount,
       taxAmount,
-      total
+      withholdingTaxAmount,
+      total,
+      netAmountDue,
+      vatExclusiveAmount,
+      taxDetails: {
+        isVatRegistered: options?.isVatRegistered || false,
+        vatRate: options?.isVatRegistered ? PHILIPPINES_VAT_RATE : 0,
+        withholdingTaxRate: options?.includeWithholdingTax ? PHILIPPINES_WITHHOLDING_TAX_RATE : 0,
+        taxType: options?.isVatRegistered ? 'VAT' : taxRate > 0 ? 'Percentage Tax' : 'Tax Exempt'
+      }
     };
   }
 
   /**
-   * Convert currency to PHP if needed
+   * Convert currency to PHP using real-time exchange rates
    */
   private async convertCurrency(amount: number, currency: CurrencyCode): Promise<{
     totalPHP: number;
@@ -684,19 +886,29 @@ export class InvoiceService {
       return { totalPHP: amount, exchangeRate: 1 };
     }
 
-    // TODO: Implement real-time exchange rate API
-    // For now, using static rates as per existing codebase
-    const exchangeRates: Record<CurrencyCode, number> = {
-      USD: 58.75,
-      EUR: 63.20,
-      PHP: 1
-    };
+    try {
+      // Use real-time exchange rate service
+      const conversion = await exchangeRateService.convertCurrency(amount, currency, 'PHP');
+      return {
+        totalPHP: conversion.convertedAmount,
+        exchangeRate: conversion.rate
+      };
+    } catch (error) {
+      console.error('Error converting currency in invoice service:', error);
+      
+      // Fallback to static rates if API fails
+      const fallbackRates: Record<CurrencyCode, number> = {
+        USD: 58.75,
+        EUR: 63.20,
+        PHP: 1
+      };
 
-    const rate = exchangeRates[currency];
-    return {
-      totalPHP: amount * rate,
-      exchangeRate: rate
-    };
+      const rate = fallbackRates[currency];
+      return {
+        totalPHP: amount * rate,
+        exchangeRate: rate
+      };
+    }
   }
 
   // ==================== UTILITY METHODS ====================
@@ -859,6 +1071,81 @@ export class InvoiceService {
     }
   }
 
+  /**
+   * Calculate BIR-compliant tax analysis for an invoice
+   */
+  async calculateInvoiceTaxAnalysis(invoiceId: string): Promise<{
+    invoice: Invoice;
+    taxCalculation: any; // TaxCalculation from philippine-tax.service
+    birCompliance: {
+      isVatRegistered: boolean;
+      requiresWithholdingTax: boolean;
+      taxType: string;
+      vatAmount: number;
+      withholdingTaxAmount: number;
+      netAmountDue: number;
+    };
+    recommendations: string[];
+  }> {
+    try {
+      const invoice = await this.getInvoiceById(invoiceId);
+      if (!invoice) {
+        throw new Error('Invoice not found');
+      }
+
+      // Calculate comprehensive tax using Philippine tax service
+      const taxCalculation = await philippineTaxService.calculateTax({
+        grossIncome: invoice.total,
+        currency: invoice.currency,
+        incomeType: 'professional', // Default to professional services
+        isVatRegistered: invoice.total >= 3000000, // VAT registration threshold
+        deductions: 0 // Invoices don't typically have deductions
+      });
+
+      // Determine BIR compliance requirements
+      const isVatRegistered = invoice.total >= 3000000; // ₱3M threshold
+      const requiresWithholdingTax = true; // Most professional services require withholding
+      
+      const birCompliance = {
+        isVatRegistered,
+        requiresWithholdingTax,
+        taxType: isVatRegistered ? 'VAT (12%)' : 'Percentage Tax (3%)',
+        vatAmount: taxCalculation.vatAmount,
+        withholdingTaxAmount: taxCalculation.withholdingTax,
+        netAmountDue: invoice.total - taxCalculation.withholdingTax
+      };
+
+      // Generate recommendations
+      const recommendations: string[] = [];
+      
+      if (!isVatRegistered && invoice.total > 2500000) {
+        recommendations.push('Consider VAT registration as you approach the ₱3M threshold.');
+      }
+      
+      if (requiresWithholdingTax) {
+        recommendations.push('Include withholding tax details in your invoice for client compliance.');
+      }
+      
+      if (taxCalculation.effectiveTaxRate > 15) {
+        recommendations.push('High effective tax rate. Consider reviewing deductible expenses.');
+      }
+
+      recommendations.push('Ensure proper BIR receipt issuance upon payment.');
+      recommendations.push('Keep detailed records for quarterly BIR filing.');
+
+      return {
+        invoice,
+        taxCalculation,
+        birCompliance,
+        recommendations
+      };
+
+    } catch (error) {
+      console.error('Error calculating invoice tax analysis:', error);
+      throw new Error('Failed to calculate tax analysis');
+    }
+  }
+
   // ==================== TEMPLATE MANAGEMENT ====================
 
   /**
@@ -896,10 +1183,17 @@ export class InvoiceService {
   }
 
   /**
-   * Get Philippines tax rate
+   * Get Philippines VAT rate
    */
-  static getPhilippinesTaxRate(): number {
-    return PHILIPPINES_TAX_RATE;
+  static getPhilippinesVATRate(): number {
+    return PHILIPPINES_VAT_RATE;
+  }
+
+  /**
+   * Get Philippines withholding tax rate
+   */
+  static getPhilippinesWithholdingTaxRate(): number {
+    return PHILIPPINES_WITHHOLDING_TAX_RATE;
   }
 
   /**
@@ -965,7 +1259,7 @@ export default InvoiceService;
 
 // Export utility functions
 export {
-  PHILIPPINES_TAX_RATE,
+  PHILIPPINES_VAT_RATE,
   PAYMENT_TERMS_OPTIONS,
   DEFAULT_TEMPLATES
 };

@@ -1,240 +1,172 @@
-// Firestore Security Rules for Chaching Financial Management Platform
-// Version: 1.0
-// Last Updated: 2025-06-27
-//
-// Security Architecture:
-// - All data is scoped to authenticated users
-// - Users can only access their own data through userId matching
-// - Subcollections inherit parent document security
-// - No cross-user data access allowed
-// - All operations require authentication
-
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // ============================================================================
-    // AUTHENTICATION HELPER FUNCTIONS
-    // ============================================================================
-    
-    // Check if user is authenticated
+    // Helper functions
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Check if the authenticated user owns the resource
     function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+      return request.auth != null && request.auth.uid == userId;
     }
     
-    // Check if the document belongs to the authenticated user
-    function isDocumentOwner() {
-      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    function isValidUser() {
+      return request.auth != null && request.auth.token.email_verified == true;
     }
     
-    // Validate required fields for document creation
-    function hasRequiredFields(requiredFields) {
-      return request.resource.data.keys().hasAll(requiredFields);
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
     }
     
-    // Check if userId field matches authenticated user
-    function hasValidUserId() {
-      return request.resource.data.userId == request.auth.uid;
+    // Development mode helper - allows access for test user
+    function isDevelopmentTestUser(userId) {
+      return userId == 'dev-test-user-123';
     }
     
-    // Validate timestamp fields
-    function hasValidTimestamps() {
-      return request.resource.data.createdAt is timestamp 
-        && request.resource.data.updatedAt is timestamp;
-    }
-    
-    // ============================================================================
-    // USER PROFILE RULES
-    // ============================================================================
-    
-    // User profiles - users can only access their own profile
+    // Users collection
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read: if isOwner(userId) || isDevelopmentTestUser(userId);
+      allow create: if isOwner(userId) && 
+        hasRequiredFields(['email', 'createdAt', 'updatedAt']);
+      allow update: if isOwner(userId) && 
+        request.resource.data.email == resource.data.email && // Can't change email
+        request.resource.data.createdAt == resource.data.createdAt; // Can't change creation date
+      allow delete: if false; // Users cannot delete their accounts via client
       
-      // Validate user document structure on creation
-      allow create: if isOwner(userId) 
-        && hasRequiredFields(['email', 'name', 'preferences'])
-        && hasValidTimestamps();
-      
-      // Allow updates but preserve critical fields
-      allow update: if isOwner(userId) 
-        && hasValidTimestamps()
-        && request.resource.data.id == resource.data.id;
-      
-      // ============================================================================
-      // USER SUBCOLLECTIONS (USER-SCOPED DATA)
-      // ============================================================================
-      
-      // Clients subcollection
+      // User subcollections
       match /clients/{clientId} {
-        allow read, write: if isOwner(userId);
-        
-        // Validate client document structure
-        allow create: if isOwner(userId)
-          && hasValidUserId()
-          && hasRequiredFields(['name', 'type', 'status'])
-          && hasValidTimestamps();
-        
-        allow update: if isOwner(userId)
-          && hasValidUserId()
-          && hasValidTimestamps()
-          && request.resource.data.id == resource.data.id;
+        allow read, write: if isOwner(userId) || isDevelopmentTestUser(userId);
+        allow create: if (isOwner(userId) && 
+          hasRequiredFields(['name', 'status', 'type', 'createdAt', 'updatedAt'])) ||
+          isDevelopmentTestUser(userId);
       }
       
-      // Transactions subcollection
       match /transactions/{transactionId} {
-        allow read, write: if isOwner(userId);
-        
-        // Validate transaction document structure
-        allow create: if isOwner(userId)
-          && hasValidUserId()
-          && hasRequiredFields(['amount', 'currency', 'date', 'description', 'type'])
-          && hasValidTimestamps()
-          && request.resource.data.amount is number
-          && request.resource.data.amount > 0
-          && request.resource.data.currency in ['USD', 'EUR', 'PHP']
-          && request.resource.data.type in ['income', 'expense'];
-        
-        allow update: if isOwner(userId)
-          && hasValidUserId()
-          && hasValidTimestamps()
-          && request.resource.data.id == resource.data.id;
+        allow read: if isOwner(userId) || isDevelopmentTestUser(userId);
+        allow write: if isOwner(userId) || isDevelopmentTestUser(userId);
+        allow create: if (isOwner(userId) && 
+          hasRequiredFields(['amount', 'currency', 'type', 'date', 'description', 'category'])) ||
+          isDevelopmentTestUser(userId);
+        allow update: if isOwner(userId) || isDevelopmentTestUser(userId);
       }
       
-      // Goals subcollection
+      match /categories/{categoryId} {
+        allow read, write: if isOwner(userId) || isDevelopmentTestUser(userId);
+        allow create: if (isOwner(userId) && 
+          hasRequiredFields(['name', 'type', 'color', 'icon'])) ||
+          isDevelopmentTestUser(userId);
+      }
+      
+      match /invoiceTemplates/{templateId} {
+        allow read, write: if isOwner(userId);
+      }
+      
       match /goals/{goalId} {
         allow read, write: if isOwner(userId);
-        
-        // Validate goal document structure
-        allow create: if isOwner(userId)
-          && hasValidUserId()
-          && hasRequiredFields(['title', 'targetAmount', 'targetDate', 'category', 'status'])
-          && hasValidTimestamps()
-          && request.resource.data.targetAmount is number
-          && request.resource.data.targetAmount > 0
-          && request.resource.data.status in ['active', 'completed', 'paused'];
-        
-        allow update: if isOwner(userId)
-          && hasValidUserId()
-          && hasValidTimestamps()
-          && request.resource.data.id == resource.data.id;
       }
       
-      // Documents subcollection
-      match /documents/{documentId} {
-        allow read, write: if isOwner(userId);
-        
-        // Validate document metadata structure
-        allow create: if isOwner(userId)
-          && hasValidUserId()
-          && hasRequiredFields(['filename', 'fileUrl', 'fileType', 'category'])
-          && hasValidTimestamps()
-          && request.resource.data.fileSize is number
-          && request.resource.data.fileSize > 0;
-        
-        allow update: if isOwner(userId)
-          && hasValidUserId()
-          && hasValidTimestamps()
-          && request.resource.data.id == resource.data.id;
+      match /auditLogs/{logId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update, delete: if false; // Audit logs are immutable
       }
       
-      // Invoices subcollection
-      match /invoices/{invoiceId} {
-        allow read, write: if isOwner(userId);
-        
-        // Validate invoice document structure
-        allow create: if isOwner(userId)
-          && hasValidUserId()
-          && hasRequiredFields(['clientId', 'invoiceNumber', 'amount', 'currency', 'issueDate', 'dueDate', 'status'])
-          && hasValidTimestamps()
-          && request.resource.data.amount is number
-          && request.resource.data.amount > 0
-          && request.resource.data.currency in ['USD', 'EUR', 'PHP']
-          && request.resource.data.status in ['draft', 'sent', 'viewed', 'paid', 'overdue', 'cancelled'];
-        
-        allow update: if isOwner(userId)
-          && hasValidUserId()
-          && hasValidTimestamps()
-          && request.resource.data.id == resource.data.id;
+      // AI Categorization feedback collection
+      match /categorizationFeedback/{feedbackId} {
+        allow read, write: if isOwner(userId) || isDevelopmentTestUser(userId);
+        allow create: if (isOwner(userId) && 
+          hasRequiredFields(['transactionId', 'suggestedCategory', 'chosenCategory', 'confidence', 'timestamp'])) ||
+          isDevelopmentTestUser(userId);
       }
     }
     
-    // ============================================================================
-    // GLOBAL RULES - DENY ALL OTHER ACCESS
-    // ============================================================================
+      // Additional user subcollections for financial data
+      match /invoices/{invoiceId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isOwner(userId) && 
+          hasRequiredFields(['invoiceNumber', 'clientId', 'status', 'currency', 'total']);
+        allow delete: if isOwner(userId) && 
+          resource.data.status == 'draft'; // Can only delete drafts
+      }
+      
+      match /payments/{paymentId} {
+        allow read, write: if isOwner(userId);
+        allow create: if isOwner(userId) && 
+          hasRequiredFields(['invoiceId', 'amount', 'currency', 'paymentDate', 'status']);
+        allow delete: if false; // Payments cannot be deleted
+      }
     
-    // Deny access to any other collections or documents
+    // Email History collection
+    match /emailHistory/{emailId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.userId == resource.data.userId;
+      allow delete: if false; // Email history is immutable
+    }
+    
+    // Email Analytics collection
+    match /emailAnalytics/{analyticsId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if false;
+    }
+    
+    // Email Templates collection - can be shared
+    match /emailTemplates/{templateId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.isPublic == true ||
+         resource.data.sharedWith[request.auth.uid] == true);
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Scheduled Emails collection
+    match /scheduledEmails/{emailId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Email Queue collection
+    match /emailQueue/{queueId} {
+      allow read: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Exchange Rates collection - read-only for all authenticated users
+    match /exchangeRates/{rateId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only server can write exchange rates
+    }
+    
+    // Default deny all
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
-
-// ============================================================================
-// SECURITY FEATURES IMPLEMENTED
-// ============================================================================
-//
-// 1. User Data Isolation:
-//    - All data is scoped under /users/{userId}/ path
-//    - Only authenticated users can access their own data
-//    - Cross-user data access is impossible
-//
-// 2. Field Validation:
-//    - Required fields validation on document creation
-//    - Data type validation for critical fields
-//    - Enum validation for status and type fields
-//    - Positive number validation for amounts
-//
-// 3. Audit Trail Protection:
-//    - Document IDs cannot be changed
-//    - userId fields cannot be modified
-//    - Timestamp fields are required and validated
-//
-// 4. Business Logic Enforcement:
-//    - Currency codes limited to USD, EUR, PHP
-//    - Transaction amounts must be positive
-//    - Status fields use controlled vocabularies
-//
-// 5. Defense in Depth:
-//    - Default deny rule for any unmatched paths
-//    - Authentication required for all operations
-//    - Ownership validation on every request
-//
-// ============================================================================
-// DEPLOYMENT INSTRUCTIONS
-// ============================================================================
-//
-// 1. Development Environment:
-//    firebase deploy --only firestore:rules --project your-dev-project
-//
-// 2. Staging Environment:
-//    firebase deploy --only firestore:rules --project your-staging-project
-//
-// 3. Production Environment:
-//    firebase deploy --only firestore:rules --project your-prod-project
-//
-// 4. Testing Rules:
-//    firebase emulators:start --only firestore
-//    npm run test:security-rules
-//
-// ============================================================================
-// MONITORING AND COMPLIANCE
-// ============================================================================
-//
-// Monitor rule violations in Firebase Console:
-// - Authentication failures
-// - Permission denied errors
-// - Unusual access patterns
-//
-// Regular security audits should verify:
-// - No cross-user data access
-// - All operations require authentication
-// - Field validation is working correctly
-// - Audit trails are preserved
-//
-// ============================================================================

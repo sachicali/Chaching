@@ -7,6 +7,10 @@ import { Timestamp } from 'firebase/firestore';
 
 export type CurrencyCode = 'USD' | 'EUR' | 'PHP';
 export type TransactionType = 'income' | 'expense';
+export type TransactionStatus = 'pending' | 'completed' | 'cancelled';
+export type ClientStatus = 'prospect' | 'active' | 'inactive' | 'on_hold';
+export type ClientType = 'individual' | 'company';
+export type PaymentMethod = 'Bank Transfer' | 'PayPal' | 'Wise' | 'GCash' | 'Credit Card' | 'Cash' | 'Other';
 
 // ==================== USER TYPES ====================
 
@@ -30,6 +34,37 @@ export interface UserPreferences {
     paymentAlerts: boolean;
   };
   theme: 'dark' | 'light';
+}
+
+// User Create/Update Types
+export interface CreateUserData {
+  email: string;
+  name: string;
+  businessName?: string;
+  phone?: string;
+  preferences: {
+    defaultCurrency: CurrencyCode;
+    dateFormat: string;
+    timeZone: string;
+    theme: 'dark' | 'light';
+    notifications: {
+      email: boolean;
+      push: boolean;
+      weekly: boolean;
+      invoiceReminders: boolean;
+      goalUpdates: boolean;
+      anomalyAlerts: boolean;
+    };
+    language: string;
+  };
+}
+
+export interface UpdateUserData {
+  name?: string;
+  businessName?: string;
+  phone?: string;
+  preferences?: Partial<CreateUserData['preferences']>;
+  updatedAt: Timestamp;
 }
 
 // ==================== CLIENT TYPES ====================
@@ -65,6 +100,36 @@ export interface ClientAddress {
   state?: string;
   postalCode?: string;
   country?: string;
+}
+
+// Client Create/Update Types
+export interface CreateClientData {
+  name: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  address?: ClientAddress;
+  type?: ClientType;
+  status?: ClientStatus;
+  avatarUrl?: string;
+  notes?: string;
+  paymentTerms?: string;
+  preferredPaymentMethod?: PaymentMethod;
+}
+
+export interface UpdateClientData {
+  id: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  address?: ClientAddress;
+  type?: ClientType;
+  status?: ClientStatus;
+  avatarUrl?: string;
+  notes?: string;
+  paymentTerms?: string;
+  preferredPaymentMethod?: PaymentMethod;
 }
 
 // ==================== TRANSACTION TYPES ====================
@@ -143,6 +208,50 @@ export interface TransactionFilters {
   searchQuery?: string;
 }
 
+// Transaction Create/Update Types
+export interface CreateTransactionData {
+  type: TransactionType;
+  amount: number;
+  currency: CurrencyCode;
+  date: Date;
+  description: string;
+  category: string;
+  status?: TransactionStatus;
+  clientId?: string;
+  paymentMethod?: PaymentMethod;
+  receiptUrl?: string;
+  metadata?: {
+    invoiceId?: string;
+    recurringId?: string;
+    tags?: string[];
+    taxDeductible?: boolean;
+    projectName?: string;
+    notes?: string;
+  };
+}
+
+export interface UpdateTransactionData {
+  id: string;
+  type?: TransactionType;
+  amount?: number;
+  currency?: CurrencyCode;
+  date?: Date;
+  description?: string;
+  category?: string;
+  status?: TransactionStatus;
+  clientId?: string;
+  paymentMethod?: PaymentMethod;
+  receiptUrl?: string;
+  metadata?: {
+    invoiceId?: string;
+    recurringId?: string;
+    tags?: string[];
+    taxDeductible?: boolean;
+    projectName?: string;
+    notes?: string;
+  };
+}
+
 // ==================== CATEGORY TYPES ====================
 
 export interface Category {
@@ -218,6 +327,11 @@ export interface Invoice {
   paymentTerms: string; // e.g., "Net 30", "Due on receipt"
   paymentMethod?: string;
   paymentInstructions?: string;
+  
+  // Enhanced Payment Tracking
+  totalPaid?: number; // Total amount paid across all payments
+  remainingBalance?: number; // Remaining balance after all payments
+  paymentPercentage?: number; // Percentage of invoice paid (0-100)
   
   // Business Information
   businessInfo: InvoiceBusinessInfo;

@@ -13,7 +13,7 @@
 
 import type { ReactNode } from 'react';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, type AuthUser, type AuthResult, type LoginCredentials, type RegisterCredentials, type PasswordResetResult } from '@/services/auth.service';
+import { authService, type AuthUser, type AuthResult, type LoginCredentials, type RegisterCredentials, type PasswordResetResult, type OAuthProvider } from '@/services/auth.service';
 import type { User } from '@/types/database.types';
 import { useToast } from '@/hooks/use-toast';
 
@@ -36,6 +36,7 @@ interface AuthContextType {
   resendEmailVerification: () => Promise<PasswordResetResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   refreshUserProfile: () => Promise<void>;
+  signInWithOAuth: (provider: OAuthProvider, useRedirect?: boolean) => Promise<AuthResult>;
 }
 
 interface AuthState {
@@ -72,6 +73,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
+    // Handle OAuth redirect result on app initialization
+    authService.handleRedirectResult().then((result) => {
+      if (!result.success && result.error) {
+        toast({
+          title: "OAuth Sign In Error",
+          description: result.error,
+          variant: "destructive",
+        });
+      }
+    });
+
     const unsubscribe = authService.onAuthStateChange(async (user) => {
       if (!mounted) return;
 
@@ -100,7 +112,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       mounted = false;
       unsubscribe();
     };
-  }, []);
+  }, [toast]);
 
   // ============================================================================
   // AUTH ACTIONS
@@ -344,6 +356,55 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [state.user]);
 
+  const signInWithOAuth = useCallback(async (provider: OAuthProvider, useRedirect = false): Promise<AuthResult> => {
+    setState(prev => ({ ...prev, isLoading: true }));
+
+    try {
+      const result = await authService.signInWithOAuth(provider, useRedirect);
+
+      if (result.success && result.user) {
+        // Fetch user profile
+        const userProfile = await authService.getUserProfile(result.user.uid);
+        
+        setState(prev => ({
+          ...prev,
+          user: result.user!,
+          userProfile,
+          isLoading: false
+        }));
+
+        toast({
+          title: "Sign In Successful",
+          description: `Welcome ${result.user.displayName || result.user.email}!`,
+        });
+      } else if (!useRedirect) {
+        // Only update loading state if not using redirect
+        setState(prev => ({ ...prev, isLoading: false }));
+        
+        if (result.error) {
+          toast({
+            title: "Sign In Failed",
+            description: result.error,
+            variant: "destructive",
+          });
+        }
+      }
+
+      return result;
+    } catch (error) {
+      setState(prev => ({ ...prev, isLoading: false }));
+      
+      const errorMessage = 'An unexpected error occurred during sign in';
+      toast({
+        title: "Sign In Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      return { success: false, error: errorMessage };
+    }
+  }, [toast]);
+
   // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
@@ -362,7 +423,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     sendPasswordReset,
     resendEmailVerification,
     updatePassword,
-    refreshUserProfile
+    refreshUserProfile,
+    signInWithOAuth
   };
 
   // Don't render children until auth state is initialized
@@ -454,6 +516,14 @@ export const useIsAuthenticated = () => {
 export const useCurrentUser = () => {
   const { user, userProfile } = useAuth();
   return { user, userProfile };
+};
+
+/**
+ * Hook for OAuth sign in functionality
+ */
+export const useOAuthSignIn = () => {
+  const { signInWithOAuth, isLoading } = useAuth();
+  return { signInWithOAuth, isLoading };
 };
 
 /**

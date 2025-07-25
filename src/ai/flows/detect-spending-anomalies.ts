@@ -9,8 +9,10 @@
  * - DetectSpendingAnomaliesOutput - The return type for the detectSpendingAnomalies function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, AI_MODELS} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
+import {genkit} from 'genkit';
 
 const DetectSpendingAnomaliesInputSchema = z.object({
   spendingData: z.string().describe('A stringified JSON array of spending data, where each object has a category and amount property.'),
@@ -31,7 +33,171 @@ const DetectSpendingAnomaliesOutputSchema = z.object({
 export type DetectSpendingAnomaliesOutput = z.infer<typeof DetectSpendingAnomaliesOutputSchema>;
 
 export async function detectSpendingAnomalies(input: DetectSpendingAnomaliesInput): Promise<DetectSpendingAnomaliesOutput> {
-  return detectSpendingAnomaliesFlow(input);
+  // Check if there's meaningful spending data
+  const hasSpendingData = input.spendingData && input.spendingData !== '[]' && input.spendingData.length > 2;
+  const hasAverageData = input.averageSpendingByCategory && input.averageSpendingByCategory !== '{}' && input.averageSpendingByCategory.length > 2;
+  
+  if (!hasSpendingData || !hasAverageData) {
+    throw new Error('NO_DATA_AVAILABLE');
+  }
+
+  // Try different Google AI models first
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (apiKey && apiKey !== 'development_mock_key') {
+    for (let i = 0; i < AI_MODELS.length; i++) {
+      try {
+        console.log(`Attempting with model: ${AI_MODELS[i]}`);
+        
+        // Create a new genkit instance with the specific model
+        const aiInstance = genkit({
+          plugins: [googleAI({ apiKey })],
+          model: AI_MODELS[i],
+        });
+        
+        // Create flow with this model
+        const flowWithModel = aiInstance.defineFlow(
+          {
+            name: `detectSpendingAnomaliesFlow_${i}`,
+            inputSchema: DetectSpendingAnomaliesInputSchema,
+            outputSchema: DetectSpendingAnomaliesOutputSchema,
+          },
+          async flowInput => {
+            const promptWithModel = aiInstance.definePrompt({
+              name: `detectSpendingAnomaliesPrompt_${i}`,
+              input: {schema: DetectSpendingAnomaliesInputSchema},
+              output: {schema: DetectSpendingAnomaliesOutputSchema},
+              prompt: `You are an AI financial assistant that analyzes spending data to detect anomalies.
+
+You are given spending data and average spending by category.
+
+Spending Data: {{{spendingData}}}
+Average Spending by Category: {{{averageSpendingByCategory}}}
+
+Analyze the spending data and identify any anomalies, such as unusual spikes in spending within specific categories.
+For each anomaly, provide the category, amount, deviation from the average, and reason for being considered an anomaly.
+Return the anomalies in the format specified in the output schema. If no anomalies are found, return an empty array.`,
+            });
+            
+            const {output} = await promptWithModel(flowInput);
+            return output!;
+          }
+        );
+        
+        return await flowWithModel(input);
+      } catch (modelError) {
+        console.warn(`Model ${AI_MODELS[i]} failed:`, modelError);
+        if (i === AI_MODELS.length - 1) {
+          // All Google models failed, continue to Google GenAI SDK fallback
+          console.warn('All Google AI models failed, attempting Google GenAI SDK fallback');
+        }
+      }
+    }
+  }
+
+  try {
+    // Try primary Google AI as configured
+    return await detectSpendingAnomaliesFlow(input);
+  } catch (error) {
+    console.warn('Primary Google AI failed, attempting fallback:', error);
+    
+    // Try Google Generative AI SDK as first fallback
+    try {
+      const { googleGenAI } = await import('@/services/google-genai.service');
+      
+      if (!googleGenAI.isAvailable()) {
+        throw new Error('Google GenAI not configured');
+      }
+      
+      console.log('Attempting Google Generative AI SDK fallback');
+      const spendingData = JSON.parse(input.spendingData);
+      const averageData = JSON.parse(input.averageSpendingByCategory);
+      
+      // Convert to expected format for Google GenAI
+      const transactions = spendingData.map((item: {category: string; amount: number}) => ({
+        category: item.category,
+        amount: item.amount,
+        date: new Date(),
+        description: `${item.category} expense`
+      }));
+      
+      const result = await googleGenAI.detectSpendingAnomalies({
+        transactions,
+        averageSpending: averageData
+      });
+      
+      // Map Google GenAI result to expected format
+      return {
+        anomalies: result.anomalies.map((anomaly: {category: string; amount: number; severity: string; description: string}) => ({
+          category: anomaly.category,
+          amount: anomaly.amount,
+          deviation: `${anomaly.severity} deviation`,
+          reason: anomaly.description
+        }))
+      };
+    } catch (genAIError) {
+      console.warn('Google GenAI SDK failed, attempting Ollama fallback:', genAIError);
+    }
+    
+    // Try Ollama as second fallback
+    try {
+      const { ollamaAI } = await import('@/services/ollama-ai.service');
+      
+      // Check if Ollama is available
+      const isAvailable = await ollamaAI.isAvailable();
+      if (!isAvailable) {
+        console.warn('Ollama not available, will need to install model');
+        await ollamaAI.ensureModel();
+      }
+      
+      const spendingData = JSON.parse(input.spendingData);
+      const averageData = JSON.parse(input.averageSpendingByCategory);
+      
+      // Convert to expected format for Ollama
+      const expenses: Record<string, number> = {};
+      spendingData.forEach((item: { category: string; amount: number }) => {
+        expenses[item.category] = item.amount;
+      });
+      
+      const result = await ollamaAI.detectSpendingAnomalies({
+        expenses,
+        historicalAverages: averageData
+      });
+      
+      return result;
+    } catch (ollamaError) {
+      console.warn('Ollama failed, attempting Hugging Face fallback:', ollamaError);
+      
+      // Try Hugging Face as final fallback
+      try {
+        const { huggingFaceAI } = await import('@/services/huggingface-ai.service');
+        
+        // Check if Hugging Face is available
+        const isAvailable = await huggingFaceAI.isAvailable();
+        if (!isAvailable) {
+          throw new Error('Hugging Face API not available');
+        }
+        
+        const spendingData = JSON.parse(input.spendingData);
+        const averageData = JSON.parse(input.averageSpendingByCategory);
+        
+        // Convert to expected format for Hugging Face
+        const expenses: Record<string, number> = {};
+        spendingData.forEach((item: { category: string; amount: number }) => {
+          expenses[item.category] = item.amount;
+        });
+        
+        const result = await huggingFaceAI.detectSpendingAnomalies({
+          expenses,
+          historicalAverages: averageData
+        });
+        
+        return result;
+      } catch (huggingFaceError) {
+        console.error('All AI services failed:', error, ollamaError, huggingFaceError);
+        throw new Error('ALL_AI_SERVICES_FAILED');
+      }
+    }
+  }
 }
 
 const prompt = ai.definePrompt({

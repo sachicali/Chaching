@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarHeader,
@@ -10,11 +11,26 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarFooter,
-  // SidebarTrigger, // Not used directly here anymore if mobile trigger is in AppLayout
   useSidebar,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   LayoutDashboard,
   Users,
@@ -36,7 +52,9 @@ import {
   Send,
   Clock,
   BarChart3,
-  DollarSign, // Keep DollarSign
+  DollarSign,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -56,134 +74,340 @@ const navItems = [
 
 const emailNavItems = [
   { href: "/emails", icon: Mail, label: "Email Hub", tooltip: "Email Management Dashboard" },
-  { href: "/emails/templates", icon: FileText, label: "Templates", tooltip: "Email Templates" },
-  { href: "/emails/history", icon: Send, label: "History", tooltip: "Email History" },
-  { href: "/emails/scheduled", icon: Clock, label: "Scheduled", tooltip: "Scheduled Emails" },
-  { href: "/emails/analytics", icon: BarChart3, label: "Analytics", tooltip: "Email Analytics" },
+  { href: "/email-templates", icon: FileText, label: "Templates", tooltip: "Email Templates" },
 ];
 
 const aiToolsNavItems = [
   { href: "/insights", icon: Sparkles, label: "Insights", tooltip: "Financial Insights" },
   { href: "/digest", icon: Newspaper, label: "Digest", tooltip: "Weekly Digest" },
-  { href: "/anomalies", icon: AlertTriangle, label: "Anomalies", tooltip: "Anomaly Alerts" },
   { href: "/predictions", icon: Brain, label: "Predictions", tooltip: "Income Predictions" },
 ];
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { isMobile } = useSidebar();
+  const { isMobile, open } = useSidebar();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const getUserInitials = () => {
+    if (user?.displayName) {
+      return user.displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase();
+    }
+    if (user?.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  };
 
   return (
-    <Sidebar collapsible={isMobile ? "offcanvas" : "icon"}>
-      <SidebarHeader className="p-4 flex items-center gap-2">
-        {/* Use a simple SVG or a themed icon if DollarSign with text-primary looks off */}
-        <Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent rounded-full">
-          {/* Simple Triangle/Logo Placeholder, matching foreground color */}
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-current">
-            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-          </svg>
-        </Button>
-        <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-          <h1 className="text-xl font-semibold text-sidebar-foreground">Chaching</h1>
-          <p className="text-xs text-muted-foreground">Freelancer Finance</p>
-        </div>
-      </SidebarHeader>
-      <SidebarContent className="p-2">
-        <SidebarMenu>
-          {navItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref legacyBehavior>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))}
-                  tooltip={item.tooltip}
-                  className={cn(pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
-                >
-                  <a>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </a>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-
-        <div className="mt-4 p-2 group-data-[collapsible=icon]:hidden">
-          <p className="text-sm font-medium text-sidebar-foreground/70">Email Automation</p>
-        </div>
-        <SidebarMenu>
-          {emailNavItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref legacyBehavior>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href || (item.href !== "/emails" && pathname.startsWith(item.href))}
-                  tooltip={item.tooltip}
-                  className={cn(pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
-                >
-                  <a>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </a>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-
-        <div className="mt-4 p-2 group-data-[collapsible=icon]:hidden">
-          <p className="text-sm font-medium text-sidebar-foreground/70">AI Tools</p>
-        </div>
-         <SidebarMenu>
-          {aiToolsNavItems.map((item) => (
-            <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref legacyBehavior>
-                <SidebarMenuButton
-                  asChild
-                  isActive={pathname === item.href}
-                  tooltip={item.tooltip}
-                   className={cn(pathname === item.href && "bg-sidebar-accent text-sidebar-accent-foreground")}
-                >
-                  <a>
-                    <item.icon />
-                    <span>{item.label}</span>
-                  </a>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
-      <SidebarFooter className="p-2 border-t border-sidebar-border">
-        <SidebarMenu>
-           <SidebarMenuItem>
-             <Link href="/settings" passHref legacyBehavior>
-                <SidebarMenuButton asChild isActive={pathname.startsWith("/settings")} tooltip="Settings" className={cn(pathname.startsWith("/settings") && "bg-sidebar-accent text-sidebar-accent-foreground")}>
-                  <a><Settings /><span>Settings</span></a>
-                </SidebarMenuButton>
-              </Link>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Log out">
-              <LogOut />
-              <span>Log out</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-         <div className="mt-4 flex items-center gap-3 p-2 group-data-[collapsible=icon]:justify-center">
-            <Avatar className="h-9 w-9">
-              <AvatarImage src="https://placehold.co/100x100.png" alt="User Avatar" data-ai-hint="user avatar" />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col group-data-[collapsible=icon]:hidden">
-              <p className="text-sm font-medium text-sidebar-foreground">User Name</p>
-              <p className="text-xs text-muted-foreground">user@example.com</p>
+    <TooltipProvider delayDuration={0}>
+      <Sidebar collapsible={isMobile ? "offcanvas" : "icon"} className="border-r border-border/40 bg-gradient-to-b from-sidebar-background to-sidebar-background/95 shadow-xl">
+      <SidebarHeader className="h-20 flex items-center justify-center relative">
+        <div className="w-full px-4">
+          {/* Expanded State */}
+          <div className={cn(
+            "flex items-center transition-all duration-300",
+            open ? "opacity-100" : "opacity-0 pointer-events-none absolute"
+          )}>
+            <div className="relative mr-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-0.5 shadow-lg shadow-primary/20">
+                <div className="w-full h-full rounded-2xl bg-background/90 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-xl font-bold text-foreground">Chaching</h1>
+              <p className="text-xs text-muted-foreground">Financial Management</p>
             </div>
           </div>
+
+          {/* Collapsed State */}
+          <div className={cn(
+            "flex items-center justify-center transition-all duration-300",
+            !open ? "opacity-100" : "opacity-0 pointer-events-none absolute"
+          )}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="relative cursor-pointer group">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary/80 p-0.5 shadow-lg shadow-primary/20 transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                    <div className="w-full h-full rounded-2xl bg-background/90 flex items-center justify-center">
+                      <DollarSign className="h-7 w-7 text-primary" />
+                    </div>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">
+                <div className="font-semibold">Chaching</div>
+                <div className="text-xs text-muted-foreground">Financial Management</div>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+
+        {/* Floating Toggle Button */}
+        <div className={cn(
+          "absolute -right-4 top-1/2 -translate-y-1/2 z-50 transition-all duration-300",
+          !open && "-right-3"
+        )}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarTrigger className="w-8 h-8 rounded-lg bg-background border border-border shadow-md hover:shadow-lg hover:bg-accent transition-all duration-200 flex items-center justify-center group">
+                <div className="relative w-4 h-4">
+                  <ChevronLeft className={cn(
+                    "absolute inset-0 h-4 w-4 transition-all duration-300",
+                    open ? "opacity-100 rotate-0" : "opacity-0 -rotate-180"
+                  )} />
+                  <ChevronRight className={cn(
+                    "absolute inset-0 h-4 w-4 transition-all duration-300",
+                    !open ? "opacity-100 rotate-0" : "opacity-0 rotate-180"
+                  )} />
+                </div>
+              </SidebarTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              {open ? "Collapse sidebar" : "Expand sidebar"}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      </SidebarHeader>
+      
+      <Separator className="opacity-20" />
+      <SidebarContent className="px-3 py-4">
+        {/* Navigation */}
+        <div className="space-y-1">
+          <SidebarMenu>
+            {navItems.map((item) => {
+              const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Link href={item.href} passHref legacyBehavior>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActive}
+                          className={cn(
+                            "relative h-11 rounded-lg transition-all duration-200 group",
+                            "hover:bg-gradient-to-r hover:from-primary/5 hover:to-primary/10 hover:shadow-sm",
+                            isActive && "bg-gradient-to-r from-primary/10 to-primary/15 shadow-sm text-primary"
+                          )}
+                        >
+                          <a className="flex items-center gap-3 px-3">
+                            <item.icon className={cn(
+                              "h-5 w-5 transition-all duration-200",
+                              isActive ? "text-primary" : "text-muted-foreground group-hover:text-primary/70"
+                            )} />
+                            <span className={cn(
+                              "font-medium transition-all duration-200",
+                              isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                              "group-data-[collapsible=icon]:sr-only"
+                            )}>
+                              {item.label}
+                            </span>
+                          </a>
+                        </SidebarMenuButton>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="group-data-[collapsible=icon]:flex hidden">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </div>
+
+        {/* Email Section */}
+        <div className="mt-8">
+          <div className="mb-3 px-3 group-data-[collapsible=icon]:hidden">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider opacity-60">
+              Email Automation
+            </p>
+          </div>
+          <div className="space-y-1">
+            <SidebarMenu>
+              {emailNavItems.map((item) => {
+                const isActive = pathname === item.href || (item.href !== "/emails" && pathname.startsWith(item.href));
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <Link href={item.href} passHref legacyBehavior>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.tooltip}
+                        className={cn(
+                          "relative h-11 rounded-lg transition-all duration-200 group",
+                          "hover:bg-muted/50",
+                          isActive && "bg-emerald-500/10 border-l-2 border-emerald-500"
+                        )}
+                      >
+                        <a className="flex items-center gap-3 px-3">
+                          <item.icon className={cn(
+                            "h-5 w-5 transition-colors duration-200",
+                            isActive ? "text-emerald-500" : "text-muted-foreground"
+                          )} />
+                          <span className={cn(
+                            "font-medium transition-colors duration-200",
+                            isActive ? "text-foreground" : "text-muted-foreground"
+                          )}>
+                            {item.label}
+                          </span>
+                        </a>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
+        </div>
+
+        {/* AI Tools Section */}
+        <div className="mt-8">
+          <div className="mb-3 px-3 group-data-[collapsible=icon]:hidden">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider opacity-60">
+              AI Intelligence
+            </p>
+          </div>
+          <div className="space-y-1">
+            <SidebarMenu>
+              {aiToolsNavItems.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <Link href={item.href} passHref legacyBehavior>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.tooltip}
+                        className={cn(
+                          "relative h-11 rounded-lg transition-all duration-200 group",
+                          "hover:bg-muted/50",
+                          isActive && "bg-emerald-500/10 border-l-2 border-emerald-500"
+                        )}
+                      >
+                        <a className="flex items-center gap-3 px-3">
+                          <item.icon className={cn(
+                            "h-5 w-5 transition-colors duration-200",
+                            isActive ? "text-emerald-500" : "text-muted-foreground"
+                          )} />
+                          <span className={cn(
+                            "font-medium transition-colors duration-200",
+                            isActive ? "text-foreground" : "text-muted-foreground"
+                          )}>
+                            {item.label}
+                          </span>
+                        </a>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
+          </div>
+        </div>
+      </SidebarContent>
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className={cn(
+                    "h-16 rounded-xl transition-all duration-300",
+                    "hover:bg-sidebar-accent",
+                    "data-[state=open]:bg-sidebar-accent"
+                  )}
+                >
+                  <div className="relative">
+                    <Avatar className="h-11 w-11 rounded-xl border border-border">
+                      <AvatarImage 
+                        src={user?.photoURL || undefined} 
+                        alt={user?.displayName || user?.email || 'User'} 
+                        className="rounded-xl"
+                      />
+                      <AvatarFallback className="rounded-xl bg-primary text-primary-foreground font-bold">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background" />
+                  </div>
+                  <div className="grid flex-1 text-left">
+                    <span className="truncate font-semibold text-foreground">
+                      {user?.displayName || 'User'}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {user?.email}
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent 
+                className={cn(
+                  "w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl",
+                  "border shadow-lg"
+                )}
+                side="bottom"
+                align="end"
+                sideOffset={8}
+              >
+                <DropdownMenuLabel className="p-0 font-normal">
+                  <div className="flex items-center gap-3 px-4 py-3 border-b">
+                    <Avatar className="h-10 w-10 rounded-xl border border-border">
+                      <AvatarImage 
+                        src={user?.photoURL || undefined} 
+                        alt={user?.displayName || user?.email || 'User'}
+                        className="rounded-xl"
+                      />
+                      <AvatarFallback className="rounded-xl bg-primary text-primary-foreground font-bold">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left">
+                      <span className="truncate font-bold text-foreground">
+                        {user?.displayName || 'User'}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {user?.email}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+                <div className="p-2">
+                  <DropdownMenuItem asChild className="rounded-lg h-11 transition-all duration-200">
+                    <Link href="/settings" className="flex items-center gap-3 px-3">
+                      <Settings className="h-4 w-4" />
+                      <span className="font-medium">Settings</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleSignOut} 
+                    className="rounded-lg h-11 transition-all duration-200 text-destructive hover:text-destructive"
+                  >
+                    <div className="flex items-center gap-3 px-3">
+                      <LogOut className="h-4 w-4" />
+                      <span className="font-medium">Sign out</span>
+                    </div>
+                  </DropdownMenuItem>
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
+    </TooltipProvider>
   );
 }

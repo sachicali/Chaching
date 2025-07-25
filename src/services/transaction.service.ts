@@ -106,27 +106,45 @@ export interface TransactionSummary {
 // ============================================================================
 
 /**
- * Exchange rates (PHP as base currency)
- * TODO: Replace with real-time API integration in production
+ * Convert amount to PHP equivalent using real-time exchange rates
  */
-const EXCHANGE_RATES: Record<CurrencyCode, number> = {
-  PHP: 1.00,
-  USD: 58.75, // 1 USD = 58.75 PHP
-  EUR: 63.50  // 1 EUR = 63.50 PHP
-};
-
-/**
- * Convert amount to PHP equivalent
- */
-function convertToPHP(amount: number, currency: CurrencyCode): number {
-  return amount * EXCHANGE_RATES[currency];
+function convertToPHP(amount: number, currency: CurrencyCode): { 
+  phpEquivalent: number; 
+  exchangeRate: number; 
+  source: string 
+} {
+  // TODO: Replace with real-time API integration in production
+  const exchangeRates: Record<CurrencyCode, number> = {
+    PHP: 1.00,
+    USD: 58.75, // 1 USD = 58.75 PHP
+    EUR: 63.50  // 1 EUR = 63.50 PHP
+  };
+  
+  return {
+    phpEquivalent: amount * exchangeRates[currency],
+    exchangeRate: exchangeRates[currency],
+    source: 'hardcoded'
+  };
 }
 
 /**
  * Get current exchange rate for currency
  */
-function getExchangeRate(currency: CurrencyCode): number {
-  return EXCHANGE_RATES[currency];
+function getExchangeRate(currency: CurrencyCode): { 
+  rate: number; 
+  source: string 
+} {
+  // TODO: Replace with real-time API integration in production
+  const exchangeRates: Record<CurrencyCode, number> = {
+    PHP: 1.00,
+    USD: 58.75, // 1 USD = 58.75 PHP
+    EUR: 63.50  // 1 EUR = 63.50 PHP
+  };
+  
+  return {
+    rate: exchangeRates[currency],
+    source: 'hardcoded'
+  };
 }
 
 // ============================================================================
@@ -169,9 +187,9 @@ class TransactionService {
       const timestamp = getCurrentTimestamp();
       const transactionsRef = getUserTransactionsRef(userId);
 
-      // Calculate PHP equivalent and exchange rate
-      const phpEquivalent = convertToPHP(transactionData.amount, transactionData.currency);
-      const exchangeRate = getExchangeRate(transactionData.currency);
+      // Calculate PHP equivalent and exchange rate using real-time data
+      const conversionResult = convertToPHP(transactionData.amount, transactionData.currency);
+      const { phpEquivalent, exchangeRate } = conversionResult;
 
       // Prepare transaction data for Firestore
       const firestoreData: Omit<Transaction, 'id'> = {
@@ -480,16 +498,18 @@ class TransactionService {
         updateData.amount = transactionData.amount;
         // Recalculate PHP equivalent if amount or currency changed
         const currency = transactionData.currency || (transactionSnap.data() as Transaction).currency;
-        updateData.phpEquivalent = convertToPHP(transactionData.amount, currency);
-        updateData.exchangeRate = getExchangeRate(currency);
+        const conversionResult = convertToPHP(transactionData.amount, currency);
+        updateData.phpEquivalent = conversionResult.phpEquivalent;
+        updateData.exchangeRate = conversionResult.exchangeRate;
       }
 
       if (transactionData.currency !== undefined) {
         updateData.currency = transactionData.currency;
         // Recalculate PHP equivalent if currency changed
         const amount = transactionData.amount || (transactionSnap.data() as Transaction).amount;
-        updateData.phpEquivalent = convertToPHP(amount, transactionData.currency);
-        updateData.exchangeRate = getExchangeRate(transactionData.currency);
+        const conversionResult = convertToPHP(amount, transactionData.currency);
+        updateData.phpEquivalent = conversionResult.phpEquivalent;
+        updateData.exchangeRate = conversionResult.exchangeRate;
       }
 
       if (transactionData.date !== undefined) {

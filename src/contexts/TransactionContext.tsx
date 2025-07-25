@@ -385,7 +385,7 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Category filter
-      if (filters.category && transaction.category !== filters.category) {
+      if (filters.categoryId && transaction.category !== filters.categoryId) {
         return false;
       }
 
@@ -399,21 +399,22 @@ export const TransactionProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      // Payment method filter
-      if (filters.paymentMethod && transaction.paymentMethod !== filters.paymentMethod) {
-        return false;
-      }
-
       // Date range filter
       if (filters.startDate || filters.endDate) {
-        const transactionDate = transaction.date.toDate();
+        const transactionDate = transaction.date.toDate ? transaction.date.toDate() : transaction.date;
         
-        if (filters.startDate && transactionDate < filters.startDate.toDate()) {
-          return false;
+        if (filters.startDate) {
+          const startDate = (filters.startDate as any).toDate ? (filters.startDate as any).toDate() : filters.startDate;
+          if (transactionDate < startDate) {
+            return false;
+          }
         }
         
-        if (filters.endDate && transactionDate > filters.endDate.toDate()) {
-          return false;
+        if (filters.endDate) {
+          const endDate = (filters.endDate as any).toDate ? (filters.endDate as any).toDate() : filters.endDate;
+          if (transactionDate > endDate) {
+            return false;
+          }
         }
       }
 

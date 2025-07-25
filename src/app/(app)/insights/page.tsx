@@ -102,7 +102,7 @@ export default function InsightsPage() {
               onChange={(e) => handleJsonInputChange('recurringExpenses', e.target.value)}
             />
           </div>
-          <Button onClick={handleSubmit} disabled={isLoading} variant="primary">
+          <Button onClick={handleSubmit} disabled={isLoading} variant="default">
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
             Generate Financial Insights
           </Button>

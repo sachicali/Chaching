@@ -45,29 +45,39 @@ import {
   Star,
   Clock,
   Tag,
+  TrendingUp,
+  BarChart3,
+  TestTube,
+  Percent,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { TEMPLATE_CATEGORIES, type TemplateFormData } from '@/schemas/template.schema';
+import type { EmailTemplate } from '@/types/database.types';
 
-// Mock template data interface
-interface EmailTemplate extends TemplateFormData {
-  id: string;
-  createdAt: Date;
-  updatedAt: Date;
-  usageCount: number;
+interface ExtendedEmailTemplate extends EmailTemplate {
+  usageCount?: number;
   lastUsed?: Date;
+  openRate?: number;
+  clickRate?: number;
+  version?: number;
+  isAbTest?: boolean;
+  description?: string;
+  category?: string;
+  tags?: string[];
 }
 
 interface TemplateListProps {
-  templates?: EmailTemplate[];
+  templates?: ExtendedEmailTemplate[];
   isLoading?: boolean;
   onCreateNew?: () => void;
-  onEdit?: (template: EmailTemplate) => void;
-  onPreview?: (template: EmailTemplate) => void;
-  onDuplicate?: (template: EmailTemplate) => void;
+  onEdit?: (template: ExtendedEmailTemplate) => void;
+  onPreview?: (template: ExtendedEmailTemplate) => void;
+  onDuplicate?: (template: ExtendedEmailTemplate) => void;
   onDelete?: (templateId: string) => Promise<void>;
-  onUse?: (template: EmailTemplate) => void;
+  onUse?: (template: ExtendedEmailTemplate) => void;
+  onCreateAbTest?: (template: ExtendedEmailTemplate) => void;
+  onAnalyzePerformance?: (template: ExtendedEmailTemplate) => void;
 }
 
 export function TemplateList({
@@ -79,6 +89,8 @@ export function TemplateList({
   onDuplicate,
   onDelete,
   onUse,
+  onCreateAbTest,
+  onAnalyzePerformance,
 }: TemplateListProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -97,7 +109,7 @@ export function TemplateList({
                            (template.description && template.description.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesCategory = selectedCategory === 'all' || template.category === selectedCategory;
-      const matchesType = selectedType === 'all' || template.type === selectedType;
+      const matchesType = selectedType === 'all' || template.templateType === selectedType;
       
       return matchesSearch && matchesCategory && matchesType;
     })
@@ -106,9 +118,9 @@ export function TemplateList({
         case 'name':
           return a.name.localeCompare(b.name);
         case 'usage':
-          return b.usageCount - a.usageCount;
+          return (b.usageCount || 0) - (a.usageCount || 0);
         case 'recent':
-          return b.updatedAt.getTime() - a.updatedAt.getTime();
+          return b.updatedAt.toMillis() - a.updatedAt.toMillis();
         default:
           return 0;
       }
@@ -164,9 +176,9 @@ export function TemplateList({
   };
 
   // Render template card
-  const renderTemplateCard = (template: EmailTemplate) => {
-    const Icon = getTemplateIcon(template.type);
-    const colorClass = getTemplateColor(template.type);
+  const renderTemplateCard = (template: ExtendedEmailTemplate) => {
+    const Icon = getTemplateIcon(template.templateType || '');
+    const colorClass = getTemplateColor(template.templateType || '');
 
     return (
       <Card key={template.id} className="relative group hover:shadow-md transition-shadow">
@@ -177,7 +189,20 @@ export function TemplateList({
                 <Icon className="h-5 w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-base line-clamp-1">{template.name}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-base line-clamp-1">{template.name}</CardTitle>
+                  {template.isAbTest && (
+                    <Badge variant="outline" className="text-xs">
+                      <TestTube className="h-3 w-3 mr-1" />
+                      A/B
+                    </Badge>
+                  )}
+                  {template.version && template.version > 1 && (
+                    <Badge variant="secondary" className="text-xs">
+                      v{template.version}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
                   {template.subject}
                 </p>
@@ -207,6 +232,19 @@ export function TemplateList({
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {onCreateAbTest && (
+                  <DropdownMenuItem onClick={() => onCreateAbTest(template)}>
+                    <TestTube className="h-4 w-4 mr-2" />
+                    Create A/B Test
+                  </DropdownMenuItem>
+                )}
+                {onAnalyzePerformance && (
+                  <DropdownMenuItem onClick={() => onAnalyzePerformance(template)}>
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    Analyze Performance
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => setDeleteTemplateId(template.id)}
@@ -247,6 +285,26 @@ export function TemplateList({
 
             <Separator />
 
+            {/* Performance Metrics */}
+            {(template.openRate !== undefined || template.clickRate !== undefined) && (
+              <div className="flex items-center space-x-4 text-xs">
+                {template.openRate !== undefined && (
+                  <div className="flex items-center space-x-1">
+                    <Eye className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Open:</span>
+                    <span className="font-medium">{(template.openRate * 100).toFixed(1)}%</span>
+                  </div>
+                )}
+                {template.clickRate !== undefined && (
+                  <div className="flex items-center space-x-1">
+                    <Percent className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-muted-foreground">Click:</span>
+                    <span className="font-medium">{(template.clickRate * 100).toFixed(1)}%</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Template Stats */}
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <div className="flex items-center space-x-4">
@@ -262,7 +320,7 @@ export function TemplateList({
                     Default
                   </Badge>
                 )}
-                <span className="capitalize">{template.type}</span>
+                <span className="capitalize">{template.templateType}</span>
               </div>
             </div>
 

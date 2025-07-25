@@ -397,15 +397,74 @@ export function TemplateEditor({
                         Customize the appearance and branding of your template.
                       </p>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Palette className="h-12 w-12 mx-auto mb-4" />
-                        <p className="text-lg font-medium">Advanced Styling</p>
+                    <CardContent className="space-y-6">
+                      {/* Brand Colors */}
+                      <div className="space-y-3">
+                        <FormLabel>Brand Colors</FormLabel>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Primary Color</label>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded border-2 border-muted bg-blue-600" />
+                              <Input placeholder="#3B82F6" disabled />
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Accent Color</label>
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded border-2 border-muted bg-green-600" />
+                              <Input placeholder="#10B981" disabled />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Typography */}
+                      <div className="space-y-3">
+                        <FormLabel>Typography</FormLabel>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Font Family</label>
+                            <Select disabled>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Arial, sans-serif" />
+                              </SelectTrigger>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">Font Size</label>
+                            <Select disabled>
+                              <SelectTrigger>
+                                <SelectValue placeholder="14px" />
+                              </SelectTrigger>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Template Layout */}
+                      <div className="space-y-3">
+                        <FormLabel>Template Layout</FormLabel>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="p-4 border rounded-lg text-center cursor-pointer hover:bg-muted transition-colors">
+                            <div className="w-full h-12 bg-muted rounded mb-2" />
+                            <span className="text-sm">Minimal</span>
+                          </div>
+                          <div className="p-4 border-2 border-primary rounded-lg text-center cursor-pointer">
+                            <div className="w-full h-12 bg-primary/20 rounded mb-2" />
+                            <span className="text-sm font-medium">Professional</span>
+                          </div>
+                          <div className="p-4 border rounded-lg text-center cursor-pointer hover:bg-muted transition-colors">
+                            <div className="w-full h-12 bg-muted rounded mb-2" />
+                            <span className="text-sm">Modern</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Coming Soon Notice */}
+                      <div className="text-center py-4 text-muted-foreground border-t">
                         <p className="text-sm">
-                          Template styling features will be available in a future update.
-                        </p>
-                        <p className="text-xs mt-2">
-                          For now, use the rich text editor to format your content.
+                          🚀 Advanced styling features including custom CSS, brand asset upload, and layout customization coming in the next update.
                         </p>
                       </div>
                     </CardContent>

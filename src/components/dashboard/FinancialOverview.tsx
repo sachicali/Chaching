@@ -11,7 +11,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +32,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { reportService } from '@/services/report.service';
 import { transactionService } from '@/services/transaction.service';
 import { downloadCSV, generateReportFilename } from '@/utils/export.util';
+import { cn } from '@/lib/utils';
 import type { BusinessSummary } from '@/services/report.service';
 
 // ============================================================================
@@ -58,7 +59,6 @@ interface KPICard {
   change: number;
   changeLabel: string;
   icon: React.ReactNode;
-  color: 'green' | 'red' | 'blue' | 'purple' | 'orange';
   trend: 'up' | 'down' | 'stable';
 }
 
@@ -75,14 +75,17 @@ export function FinancialOverview() {
   const [isExporting, setIsExporting] = useState(false);
 
   // Date range for current analysis (last 30 days)
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - 30);
+  const endDate = useMemo(() => new Date(), []);
+  const startDate = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30);
+    return date;
+  }, []);
 
   /**
    * Load financial data and calculate metrics
    */
-  const loadFinancialData = async () => {
+  const loadFinancialData = useCallback(async () => {
     if (!user?.uid) return;
 
     try {
@@ -135,7 +138,7 @@ export function FinancialOverview() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.uid, startDate, endDate]);
 
   /**
    * Calculate growth rate from monthly trends
@@ -162,7 +165,6 @@ export function FinancialOverview() {
         change: metrics.revenueGrowth,
         changeLabel: 'vs last period',
         icon: <DollarSign className="h-4 w-4" />,
-        color: 'green',
         trend: metrics.revenueGrowth > 0 ? 'up' : metrics.revenueGrowth < 0 ? 'down' : 'stable'
       },
       {
@@ -172,7 +174,6 @@ export function FinancialOverview() {
         change: metrics.profitMargin,
         changeLabel: 'profit margin',
         icon: <TrendingUp className="h-4 w-4" />,
-        color: metrics.netProfit >= 0 ? 'green' : 'red',
         trend: metrics.netProfit >= 0 ? 'up' : 'down'
       },
       {
@@ -182,7 +183,6 @@ export function FinancialOverview() {
         change: metrics.expenseRatio,
         changeLabel: 'of revenue',
         icon: <BarChart3 className="h-4 w-4" />,
-        color: metrics.expenseRatio > 70 ? 'red' : metrics.expenseRatio > 50 ? 'orange' : 'blue',
         trend: metrics.expenseRatio > 70 ? 'down' : 'stable'
       },
       {
@@ -192,7 +192,6 @@ export function FinancialOverview() {
         change: metrics.avgTransactionValue,
         changeLabel: 'avg value',
         icon: <PieChart className="h-4 w-4" />,
-        color: 'purple',
         trend: 'stable'
       },
       {
@@ -202,7 +201,6 @@ export function FinancialOverview() {
         change: metrics.revenueGrowth,
         changeLabel: 'growth rate',
         icon: <Calendar className="h-4 w-4" />,
-        color: 'blue',
         trend: metrics.revenueGrowth > 0 ? 'up' : 'down'
       },
       {
@@ -212,7 +210,6 @@ export function FinancialOverview() {
         change: 0,
         changeLabel: 'primary source',
         icon: <Target className="h-4 w-4" />,
-        color: 'orange',
         trend: 'stable'
       }
     ];
@@ -255,49 +252,38 @@ export function FinancialOverview() {
   const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
     switch (trend) {
       case 'up':
-        return <TrendingUp className="h-3 w-3 text-green-500" />;
+        return <TrendingUp className="h-3 w-3 text-success" />;
       case 'down':
-        return <TrendingDown className="h-3 w-3 text-red-500" />;
+        return <TrendingDown className="h-3 w-3 text-destructive" />;
       default:
-        return <div className="h-3 w-3 rounded-full bg-gray-400" />;
+        return <div className="h-3 w-3 rounded-full bg-muted-foreground/40" />;
     }
   };
 
-  /**
-   * Get color classes for different states
-   */
-  const getColorClasses = (color: KPICard['color']) => {
-    const colorMap = {
-      green: 'border-green-200 bg-green-50 text-green-700',
-      red: 'border-red-200 bg-red-50 text-red-700',
-      blue: 'border-blue-200 bg-blue-50 text-blue-700',
-      purple: 'border-purple-200 bg-purple-50 text-purple-700',
-      orange: 'border-orange-200 bg-orange-50 text-orange-700'
-    };
-    return colorMap[color];
-  };
 
   // Load data on component mount
   useEffect(() => {
     loadFinancialData();
-  }, [user?.uid]);
+  }, [loadFinancialData]);
 
   // Render loading state
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Financial Overview</CardTitle>
-          <CardDescription>Loading financial metrics...</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(8)].map((_, i) => (
+          <Card key={i}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="w-8 h-8 bg-muted rounded animate-pulse" />
+                <div className="space-y-2 flex-1">
+                  <div className="h-4 bg-muted rounded animate-pulse" />
+                  <div className="h-6 bg-muted rounded animate-pulse" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   }
 
@@ -305,17 +291,11 @@ export function FinancialOverview() {
   if (error) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Financial Overview</CardTitle>
-          <CardDescription>Error loading financial data</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={loadFinancialData} variant="outline">
-              Try Again
-            </Button>
-          </div>
+        <CardContent className="text-center py-8">
+          <p className="text-destructive mb-4">{error}</p>
+          <Button onClick={loadFinancialData} variant="outline">
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
@@ -342,62 +322,83 @@ export function FinancialOverview() {
 
   return (
     <div className="space-y-6">
-      {/* Header with Export Actions */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
-                Financial Overview
-              </CardTitle>
-              <CardDescription>
-                Business performance for the last 30 days
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportSummary}
-                disabled={isExporting}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                {isExporting ? 'Exporting...' : 'Export CSV'}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadFinancialData}
-              >
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
+      {/* Clean Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">
+            Financial Overview
+          </h2>
+          <p className="text-sm text-muted-foreground/70 mt-1">
+            Business performance for the last 30 days
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportSummary}
+            disabled={isExporting}
+            className="hover:bg-muted/50"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadFinancialData}
+            className="hover:bg-muted/50"
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Clean KPI Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpiCards.map((kpi) => (
-          <Card key={kpi.id} className={`border-l-4 ${getColorClasses(kpi.color)}`}>
+          <Card 
+            key={kpi.id} 
+            className="group cursor-pointer animate-fade-in-up"
+            style={{ animationDelay: `${kpiCards.indexOf(kpi) * 50}ms` }}
+          >
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {kpi.icon}
-                  <h3 className="font-medium text-sm">{kpi.title}</h3>
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center transition-all duration-200 group-hover:bg-primary/10">
+                  <div className="text-muted-foreground group-hover:text-primary transition-colors duration-200">
+                    {kpi.icon}
+                  </div>
                 </div>
-                {getTrendIcon(kpi.trend)}
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider truncate">
+                    {kpi.title}
+                  </h3>
+                </div>
+                <div className="flex items-center">
+                  {getTrendIcon(kpi.trend)}
+                </div>
               </div>
               
-              <div className="mt-2">
-                <p className="text-2xl font-bold">{kpi.value}</p>
+              <div className="space-y-2">
+                <p className="text-xl font-bold text-foreground">
+                  {kpi.value}
+                </p>
                 {kpi.change !== 0 && (
-                  <div className="flex items-center gap-1 mt-1">
-                    <Badge variant="secondary" className="text-xs">
+                  <div className="flex items-center gap-2">
+                    <Badge 
+                      variant="secondary" 
+                      className={cn(
+                        "text-xs px-2 py-0.5",
+                        kpi.trend === 'up' && "bg-success/10 text-success border-success/20",
+                        kpi.trend === 'down' && "bg-destructive/10 text-destructive border-destructive/20",
+                        kpi.trend === 'stable' && "bg-muted text-muted-foreground"
+                      )}
+                    >
                       {kpi.change > 0 ? '+' : ''}{kpi.change.toFixed(1)}%
                     </Badge>
-                    <span className="text-xs text-gray-600">{kpi.changeLabel}</span>
+                    <span className="text-xs text-muted-foreground/60">
+                      {kpi.changeLabel}
+                    </span>
                   </div>
                 )}
               </div>
@@ -407,19 +408,20 @@ export function FinancialOverview() {
       </div>
 
       {/* Summary Statistics */}
-      <Card>
+      <Card className="hover:shadow-lg hover:shadow-black/10 hover:scale-[1.01] transition-all duration-200">
         <CardHeader>
-          <CardTitle>Period Summary</CardTitle>
+          <CardTitle className="text-lg font-semibold">
+            Period Summary
+          </CardTitle>
           <CardDescription>
             {startDate.toLocaleDateString()} - {endDate.toLocaleDateString()}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Revenue Breakdown */}
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Revenue Sources */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
                 Revenue Sources
               </h4>
               <div className="space-y-2">
@@ -427,20 +429,21 @@ export function FinancialOverview() {
                   .filter(cat => cat.type === 'income')
                   .slice(0, 3)
                   .map((category, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{category.category}</span>
-                      <span className="font-medium">₱{category.amount.toLocaleString()}</span>
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                      <span className="text-sm text-muted-foreground">
+                        {category.category}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        ₱{category.amount.toLocaleString()}
+                      </span>
                     </div>
                   ))}
               </div>
             </div>
 
-            <Separator orientation="vertical" className="hidden md:block" />
-
-            {/* Expense Breakdown */}
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
+            {/* Top Expenses */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
                 Top Expenses
               </h4>
               <div className="space-y-2">
@@ -448,29 +451,36 @@ export function FinancialOverview() {
                   .filter(cat => cat.type === 'expense')
                   .slice(0, 3)
                   .map((category, index) => (
-                    <div key={index} className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{category.category}</span>
-                      <span className="font-medium">₱{category.amount.toLocaleString()}</span>
+                    <div key={index} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                      <span className="text-sm text-muted-foreground">
+                        {category.category}
+                      </span>
+                      <span className="font-medium text-foreground">
+                        ₱{category.amount.toLocaleString()}
+                      </span>
                     </div>
                   ))}
               </div>
             </div>
 
-            <Separator orientation="vertical" className="hidden md:block" />
-
             {/* Currency Distribution */}
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <Users className="h-4 w-4" />
+            <div className="space-y-4">
+              <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
                 Currency Mix
               </h4>
               <div className="space-y-2">
                 {businessSummary.currencyBreakdown.slice(0, 3).map((currency, index) => (
-                  <div key={index} className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{currency.currency}</span>
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                    <span className="text-sm text-muted-foreground">
+                      {currency.currency}
+                    </span>
                     <div className="text-right">
-                      <div className="font-medium">₱{currency.phpEquivalent.toLocaleString()}</div>
-                      <div className="text-xs text-gray-500">{currency.percentage.toFixed(1)}%</div>
+                      <div className="font-medium text-foreground">
+                        ₱{currency.phpEquivalent.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-muted-foreground/60">
+                        {currency.percentage.toFixed(1)}%
+                      </div>
                     </div>
                   </div>
                 ))}

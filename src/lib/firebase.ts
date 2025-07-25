@@ -33,24 +33,11 @@ export const db = getFirestore(app);
 // Initialize Firebase Authentication
 export const auth = getAuth(app);
 
-// Development environment setup with emulators
+// Development environment setup - Using production Firebase services
+// Emulator connection disabled to use live Firebase project
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-  // Connect to Firestore emulator if not already connected
-  try {
-    // Check if already connected to emulator by testing if we can connect
-    connectFirestoreEmulator(db, 'localhost', 8080);
-  } catch (error) {
-    // Emulator already connected or not available
-    console.log('Firestore emulator already connected or not available');
-  }
-
-  // Connect to Auth emulator if not already connected
-  try {
-    connectAuthEmulator(auth, 'http://localhost:9099');
-  } catch (error) {
-    // Emulator already connected or not available
-    console.log('Auth emulator already connected or not available');
-  }
+  console.log('Using production Firebase services for development');
+  // Note: Emulators disabled - using live Firebase project: chaching-yjluf
 }
 
 // Export the Firebase app instance

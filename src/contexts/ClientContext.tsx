@@ -52,13 +52,13 @@ export const ClientProvider = ({ children }: { children: ReactNode }) => {
       email: dbClient.email || '',
       phone: dbClient.phone,
       company: dbClient.company,
-      monthlyEarnings: dbClient.monthlyAverage || undefined,
-      totalEarningsUSD: dbClient.totalEarned || undefined,
-      paymentMedium: dbClient.preferredPaymentMethod,
+      monthlyEarnings: dbClient.monthlyEarnings || undefined,
+      totalEarningsUSD: dbClient.totalEarningsUSD || undefined,
+      paymentMedium: dbClient.paymentMedium,
       status: dbClient.status,
-      address: dbClient.address,
+      address: dbClient.address ? `${dbClient.address.street || ''} ${dbClient.address.city || ''} ${dbClient.address.state || ''}`.trim() : undefined,
       notes: dbClient.notes,
-      avatarUrl: dbClient.avatarUrl || `https://placehold.co/60x60.png?text=${dbClient.name.charAt(0)}`
+      avatarUrl: `https://placehold.co/60x60.png?text=${dbClient.name.charAt(0)}`
     };
   }, []);
 

@@ -10,7 +10,7 @@ export default function GoalsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight text-foreground">Financial Goals</h1>
-        <Button variant="primary">
+        <Button variant="default">
           <PlusCircle className="mr-2 h-4 w-4" /> Add New Goal
         </Button>
       </div>

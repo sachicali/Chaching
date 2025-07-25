@@ -13,9 +13,10 @@ import {
 import { useTransactions, useTransactionAnalytics } from "@/contexts/TransactionContext";
 import type { Transaction } from "@/types/database.types";
 import { useMemo } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface MonthlyData {
   month: string;
@@ -95,12 +96,24 @@ export function RevenueChart({
 
   if (loading) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Revenue Trends</CardTitle>
+      <Card className={cn(
+        "relative overflow-hidden border-0 bg-gradient-to-br from-background/60 to-background/40",
+        "backdrop-blur-xl shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-black/10 hover:scale-[1.01] transition-all duration-300",
+        className
+      )}>
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/20 to-muted/10" />
+        <CardHeader className="relative z-10 border-b border-border/20">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <CardTitle className="text-xl font-bold text-foreground">
+              Revenue Trends
+            </CardTitle>
+          </div>
         </CardHeader>
-        <CardContent className="flex justify-center items-center h-[300px]">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        <CardContent className="relative z-10 flex justify-center items-center h-[300px]">
+          <Loader2 className="h-12 w-12 animate-spin text-muted-foreground" />
         </CardContent>
       </Card>
     );
@@ -108,18 +121,39 @@ export function RevenueChart({
 
   if (!hasData) {
     return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle className="text-xl font-semibold">Revenue Trends</CardTitle>
+      <Card className={cn(
+        "relative overflow-hidden border-0 bg-gradient-to-br from-background/60 to-background/40",
+        "backdrop-blur-xl shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-black/10 hover:scale-[1.01] transition-all duration-300",
+        className
+      )}>
+        <div className="absolute inset-0 bg-gradient-to-r from-muted/20 to-muted/10" />
+        <CardHeader className="relative z-10 border-b border-border/20">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <CardTitle className="text-xl font-bold text-foreground">
+              Revenue Trends
+            </CardTitle>
+          </div>
         </CardHeader>
-        <CardContent className="flex flex-col justify-center items-center h-[300px] text-center text-muted-foreground">
-          <p className="mb-4">No revenue data to display for the chart.</p>
-          <div className="flex gap-2">
+        <CardContent className="relative z-10 flex flex-col justify-center items-center h-[300px] text-center">
+          <p className="text-muted-foreground/80 mb-6 font-medium">
+            No revenue data to display for the chart.
+          </p>
+          <div className="flex gap-3">
             <Link href="/income">
-              <Button variant="outline">Add Income</Button>
+              <Button className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 transition-all duration-200">
+                Add Income
+              </Button>
             </Link>
             <Link href="/expenses">
-              <Button variant="outline">Add Expense</Button>
+              <Button 
+                variant="outline" 
+                className="rounded-xl border-border/40 bg-background/50 backdrop-blur hover:bg-muted/50 hover:border-border/60 transition-all duration-200"
+              >
+                Add Expense
+              </Button>
             </Link>
           </div>
         </CardContent>
@@ -128,11 +162,23 @@ export function RevenueChart({
   }
 
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">Revenue Trends</CardTitle>
+    <Card className={cn(
+      "relative overflow-hidden border-0 bg-gradient-to-br from-background/60 to-background/40",
+      "backdrop-blur-xl shadow-xl shadow-black/5 hover:shadow-2xl hover:shadow-black/10 hover:scale-[1.01] transition-all duration-300",
+      className
+    )}>
+      <div className="absolute inset-0 bg-gradient-to-r from-muted/20 to-muted/10" />
+      <CardHeader className="relative z-10 border-b border-border/20">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <CardTitle className="text-xl font-bold text-foreground">
+            Revenue Trends
+          </CardTitle>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="relative z-10 p-6">
         <ChartContainer config={chartConfig} className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart 
@@ -141,8 +187,9 @@ export function RevenueChart({
             >
               <CartesianGrid 
                 vertical={false} 
-                stroke="hsl(var(--muted))" 
+                stroke="hsl(var(--border))" 
                 strokeDasharray="3 0" 
+                opacity={0.3}
               />
               <XAxis 
                 dataKey="month" 
@@ -164,16 +211,16 @@ export function RevenueChart({
                   if (!active || !payload?.length) return null;
                   
                   return (
-                    <div className="bg-popover border border-border rounded-md p-3 shadow-md">
-                      <p className="font-medium text-foreground mb-2">{label}</p>
+                    <div className="bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl p-3 shadow-2xl shadow-black/10">
+                      <p className="font-bold text-foreground mb-2">{label}</p>
                       {payload.map((entry, index) => (
                         <div key={index} className="flex items-center gap-2 text-sm">
                           <div 
-                            className="w-3 h-3 rounded-full" 
+                            className="w-3 h-3 rounded-full shadow-sm" 
                             style={{ backgroundColor: entry.color }}
                           />
-                          <span className="text-muted-foreground">{entry.name}:</span>
-                          <span className="font-medium text-foreground">
+                          <span className="text-muted-foreground font-medium">{entry.name}:</span>
+                          <span className="font-bold text-foreground">
                             {formatTooltipValue(entry.value as number)}
                           </span>
                         </div>
@@ -187,10 +234,10 @@ export function RevenueChart({
               <Line 
                 type="monotone" 
                 dataKey="income" 
-                stroke="var(--color-income)" 
+                stroke="rgb(34, 197, 94)" 
                 strokeWidth={3} 
                 dot={false} 
-                activeDot={{ r: 5, fill: "var(--color-income)", strokeWidth: 0 }} 
+                activeDot={{ r: 6, fill: "rgb(34, 197, 94)", strokeWidth: 2, stroke: "white" }} 
                 name="Income"
               />
               
@@ -199,10 +246,10 @@ export function RevenueChart({
                 <Line 
                   type="monotone" 
                   dataKey="expenses" 
-                  stroke="var(--color-expenses)" 
+                  stroke="rgb(239, 68, 68)" 
                   strokeWidth={3} 
                   dot={false} 
-                  activeDot={{ r: 5, fill: "var(--color-expenses)", strokeWidth: 0 }} 
+                  activeDot={{ r: 6, fill: "rgb(239, 68, 68)", strokeWidth: 2, stroke: "white" }} 
                   name="Expenses"
                 />
               )}
@@ -212,10 +259,10 @@ export function RevenueChart({
                 <Line 
                   type="monotone" 
                   dataKey="netProfit" 
-                  stroke="var(--color-netProfit)" 
+                  stroke="rgb(59, 130, 246)" 
                   strokeWidth={3} 
                   dot={false} 
-                  activeDot={{ r: 5, fill: "var(--color-netProfit)", strokeWidth: 0 }} 
+                  activeDot={{ r: 6, fill: "rgb(59, 130, 246)", strokeWidth: 2, stroke: "white" }} 
                   name="Net Profit"
                 />
               )}

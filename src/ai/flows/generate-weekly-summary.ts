@@ -10,8 +10,10 @@
  * - GenerateWeeklySummaryOutput - The return type for the generateWeeklySummary function.
  */
 
-import {ai} from '@/ai/genkit';
+import {ai, AI_MODELS} from '@/ai/genkit';
 import {z} from 'genkit';
+import {googleAI} from '@genkit-ai/googleai';
+import {genkit} from 'genkit';
 
 const GenerateWeeklySummaryInputSchema = z.object({
   income: z.number().describe('Total income for the week.'),
@@ -44,7 +46,149 @@ export type GenerateWeeklySummaryOutput = z.infer<
 export async function generateWeeklySummary(
   input: GenerateWeeklySummaryInput
 ): Promise<GenerateWeeklySummaryOutput> {
-  return generateWeeklySummaryFlow(input);
+  // Try different Google AI models first
+  const apiKey = process.env.GOOGLE_AI_API_KEY;
+  if (apiKey && apiKey !== 'development_mock_key') {
+    for (let i = 0; i < AI_MODELS.length; i++) {
+      try {
+        console.log(`Attempting with model: ${AI_MODELS[i]}`);
+        
+        // Create a new genkit instance with the specific model
+        const aiInstance = genkit({
+          plugins: [googleAI({ apiKey })],
+          model: AI_MODELS[i],
+        });
+        
+        // Create flow with this model
+        const flowWithModel = aiInstance.defineFlow(
+          {
+            name: `generateWeeklySummaryFlow_${i}`,
+            inputSchema: GenerateWeeklySummaryInputSchema,
+            outputSchema: GenerateWeeklySummaryOutputSchema,
+          },
+          async flowInput => {
+            const promptWithModel = aiInstance.definePrompt({
+              name: `generateWeeklySummaryPrompt_${i}`,
+              input: {schema: GenerateWeeklySummaryInputSchema},
+              output: {schema: GenerateWeeklySummaryOutputSchema},
+              prompt: `You are a financial advisor providing a weekly summary to a user based on their financial data.
+
+  Income: {{{income}}}
+  Expenses: {{{expenses}}}
+  Savings: {{{savings}}}
+  Spending by Category: {{#each (keys spendingByCategory)}}{{{this}}}: {{{../spendingByCategory.[this]}}} {{/each}}
+
+  Previous Week Income: {{{previousWeekIncome}}}
+  Previous Week Expenses: {{{previousWeekExpenses}}}
+  Previous Week Savings: {{{previousWeekSavings}}}
+
+  Provide a summary of the user's financial activity, key trends, and potential saving opportunities.
+  Be concise and actionable.`,
+            });
+            
+            const {output} = await promptWithModel(flowInput);
+            return output!;
+          }
+        );
+        
+        return await flowWithModel(input);
+      } catch (modelError) {
+        console.warn(`Model ${AI_MODELS[i]} failed:`, modelError);
+        if (i === AI_MODELS.length - 1) {
+          // All Google models failed, continue to Google GenAI SDK fallback
+          console.warn('All Google AI models failed, attempting Google GenAI SDK fallback');
+        }
+      }
+    }
+  }
+
+  try {
+    // Try primary Google AI as configured
+    return await generateWeeklySummaryFlow(input);
+  } catch (error) {
+    console.warn('Primary Google AI failed, attempting fallback:', error);
+    
+    // Try Google Generative AI SDK as first fallback
+    try {
+      const { googleGenAI } = await import('@/services/google-genai.service');
+      
+      if (!googleGenAI.isAvailable()) {
+        throw new Error('Google GenAI not configured');
+      }
+      
+      console.log('Attempting Google Generative AI SDK fallback');
+      
+      // Generate weekly summary using Google GenAI
+      const result = await googleGenAI.generateFinancialInsights({
+        income: input.income,
+        expenses: input.expenses,
+        savings: input.savings,
+        spendingByCategory: input.spendingByCategory,
+        recurringExpenses: {}
+      });
+      
+      // Map the result to match expected format
+      return {
+        summary: result.summary,
+        trends: `Income ${input.income > input.previousWeekIncome ? 'increased' : 'decreased'} by ${Math.abs(input.income - input.previousWeekIncome)}. Expenses ${input.expenses > input.previousWeekExpenses ? 'increased' : 'decreased'} by ${Math.abs(input.expenses - input.previousWeekExpenses)}.`,
+        opportunities: result.savingsOpportunities.join(' ')
+      };
+    } catch (genAIError) {
+      console.warn('Google GenAI SDK failed, attempting Ollama fallback:', genAIError);
+    }
+    
+    // Try Ollama as second fallback
+    try {
+      const { ollamaAI } = await import('@/services/ollama-ai.service');
+      
+      // Check if Ollama is available
+      const isAvailable = await ollamaAI.isAvailable();
+      if (!isAvailable) {
+        console.warn('Ollama not available, will need to install model');
+        await ollamaAI.ensureModel();
+      }
+      
+      const result = await ollamaAI.generateWeeklySummary({
+        income: input.income,
+        expenses: input.expenses,
+        savings: input.savings,
+        spendingByCategory: input.spendingByCategory,
+        previousWeekIncome: input.previousWeekIncome,
+        previousWeekExpenses: input.previousWeekExpenses,
+        previousWeekSavings: input.previousWeekSavings
+      });
+      
+      return result;
+    } catch (ollamaError) {
+      console.warn('Ollama failed, attempting Hugging Face fallback:', ollamaError);
+      
+      // Try Hugging Face as final fallback
+      try {
+        const { huggingFaceAI } = await import('@/services/huggingface-ai.service');
+        
+        // Check if Hugging Face is available
+        const isAvailable = await huggingFaceAI.isAvailable();
+        if (!isAvailable) {
+          throw new Error('Hugging Face API not available');
+        }
+        
+        const result = await huggingFaceAI.generateWeeklySummary({
+          income: input.income,
+          expenses: input.expenses,
+          savings: input.savings,
+          spendingByCategory: input.spendingByCategory,
+          previousWeekIncome: input.previousWeekIncome,
+          previousWeekExpenses: input.previousWeekExpenses,
+          previousWeekSavings: input.previousWeekSavings
+        });
+        
+        return result;
+      } catch (huggingFaceError) {
+        console.error('All AI services failed:', error, ollamaError, huggingFaceError);
+        throw new Error('ALL_AI_SERVICES_FAILED');
+      }
+    }
+  }
 }
 
 const prompt = ai.definePrompt({

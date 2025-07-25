@@ -301,7 +301,7 @@ export const EmailProvider = ({ children }: { children: ReactNode }) => {
     if (!user?.uid || !schedulerService) return;
 
     try {
-      const stats = await schedulerService.getQueueStats();
+      const stats = await schedulerService.getQueueStats(user.uid);
       setQueueStats(stats);
 
     } catch (err) {
@@ -400,7 +400,7 @@ export const EmailProvider = ({ children }: { children: ReactNode }) => {
       setPerformanceMetrics(null);
       setError(null);
     }
-  }, [user?.uid, refreshData]);
+  }, [user?.uid]); // Removed refreshData from dependencies to prevent infinite loop
 
   // ============================================================================
   // CONTEXT PROVIDER

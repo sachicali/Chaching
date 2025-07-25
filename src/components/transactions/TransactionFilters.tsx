@@ -82,13 +82,13 @@ const CURRENCIES: { value: CurrencyCode; label: string }[] = [
 ];
 
 const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: 'bank_transfer', label: 'Bank Transfer' },
-  { value: 'credit_card', label: 'Credit Card' },
-  { value: 'paypal', label: 'PayPal' },
-  { value: 'gcash', label: 'GCash' },
-  { value: 'cash', label: 'Cash' },
-  { value: 'crypto', label: 'Cryptocurrency' },
-  { value: 'other', label: 'Other' }
+  { value: 'Bank Transfer', label: 'Bank Transfer' },
+  { value: 'Credit Card', label: 'Credit Card' },
+  { value: 'PayPal', label: 'PayPal' },
+  { value: 'GCash', label: 'GCash' },
+  { value: 'Cash', label: 'Cash' },
+  { value: 'Wise', label: 'Wise' },
+  { value: 'Other', label: 'Other' }
 ];
 
 const INCOME_CATEGORIES = [
@@ -126,8 +126,7 @@ const getActiveFilterCount = (filters: TFilters): number => {
   if (filters.status) count++;
   if (filters.currency) count++;
   if (filters.clientId) count++;
-  if (filters.category) count++;
-  if (filters.paymentMethod) count++;
+  if (filters.categoryId) count++;
   if (filters.startDate) count++;
   if (filters.endDate) count++;
   if (filters.minAmount !== undefined) count++;
@@ -154,8 +153,8 @@ export default function TransactionFilters({
   // Local state for form inputs
   const [localFilters, setLocalFilters] = useState<TFilters>(filters);
   const [dateRange, setDateRange] = useState<DateRange>({
-    from: filters.startDate?.toDate(),
-    to: filters.endDate?.toDate()
+    from: filters.startDate && (filters.startDate as any).toDate ? (filters.startDate as any).toDate() : filters.startDate,
+    to: filters.endDate && (filters.endDate as any).toDate ? (filters.endDate as any).toDate() : filters.endDate
   });
 
   const activeFilterCount = getActiveFilterCount(filters);
@@ -196,8 +195,8 @@ export default function TransactionFilters({
   const handleResetToApplied = useCallback(() => {
     setLocalFilters(filters);
     setDateRange({
-      from: filters.startDate?.toDate(),
-      to: filters.endDate?.toDate()
+      from: filters.startDate && (filters.startDate as any).toDate ? (filters.startDate as any).toDate() : filters.startDate,
+      to: filters.endDate && (filters.endDate as any).toDate ? (filters.endDate as any).toDate() : filters.endDate
     });
   }, [filters]);
 
@@ -297,8 +296,8 @@ export default function TransactionFilters({
         <div>
           <Label htmlFor="category-filter">Category</Label>
           <Select
-            value={localFilters.category || ''}
-            onValueChange={(value) => handleFilterChange('category', value)}
+            value={localFilters.categoryId || ''}
+            onValueChange={(value) => handleFilterChange('categoryId', value)}
           >
             <SelectTrigger>
               <SelectValue placeholder="All categories" />
@@ -327,25 +326,6 @@ export default function TransactionFilters({
           </Select>
         </div>
 
-        <div>
-          <Label htmlFor="payment-method-filter">Payment Method</Label>
-          <Select
-            value={localFilters.paymentMethod || ''}
-            onValueChange={(value) => handleFilterChange('paymentMethod', value)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="All payment methods" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="">All payment methods</SelectItem>
-              {PAYMENT_METHODS.map(method => (
-                <SelectItem key={method.value} value={method.value}>
-                  {method.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <Separator />
@@ -544,15 +524,14 @@ export function ActiveFiltersDisplay({
       case 'clientId':
         const client = getClientById(value);
         return `Client: ${client?.name || 'Unknown'}`;
-      case 'category':
+      case 'categoryId':
         return `Category: ${value}`;
-      case 'paymentMethod':
-        const method = PAYMENT_METHODS.find(m => m.value === value);
-        return `Payment: ${method?.label || value}`;
       case 'startDate':
-        return `From: ${format((value as any).toDate(), 'MMM dd, yyyy')}`;
+        const startDate = (value as any).toDate ? (value as any).toDate() : value;
+        return `From: ${format(startDate, 'MMM dd, yyyy')}`;
       case 'endDate':
-        return `To: ${format((value as any).toDate(), 'MMM dd, yyyy')}`;
+        const endDate = (value as any).toDate ? (value as any).toDate() : value;
+        return `To: ${format(endDate, 'MMM dd, yyyy')}`;
       case 'minAmount':
         return `Min: ₱${value.toLocaleString()}`;
       case 'maxAmount':

@@ -20,11 +20,21 @@ import {
   User as FirebaseUser,
   AuthError,
   onAuthStateChanged,
-  Unsubscribe
+  Unsubscribe,
+  GoogleAuthProvider,
+  GithubAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  UserCredential
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
-import { getCurrentTimestamp } from '@/lib/firestore-schema';
+import { 
+  getCurrentTimestamp,
+  usersCollection,
+  getUserDocument
+} from '@/lib/firestore-schema';
 import type { User, CreateUserData, UpdateUserData } from '@/types/database.types';
 
 // ============================================================================
@@ -65,6 +75,8 @@ export interface PasswordResetResult {
   error?: string;
   message?: string;
 }
+
+export type OAuthProvider = 'google' | 'github';
 
 // ============================================================================
 // AUTH SERVICE CLASS
@@ -286,6 +298,170 @@ class AuthService {
       await updatePassword(user, newPassword);
 
       return { success: true };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: this.handleAuthError(error as AuthError)
+      };
+    }
+  }
+
+  /**
+   * Sign in with OAuth provider (Google or GitHub)
+   * @param provider - The OAuth provider to use
+   * @param useRedirect - Whether to use redirect flow (better for mobile)
+   */
+  async signInWithOAuth(provider: OAuthProvider, useRedirect = false): Promise<AuthResult> {
+    try {
+      let authProvider;
+      
+      switch (provider) {
+        case 'google':
+          authProvider = new GoogleAuthProvider();
+          authProvider.setCustomParameters({
+            prompt: 'select_account'
+          });
+          break;
+        case 'github':
+          authProvider = new GithubAuthProvider();
+          authProvider.addScope('read:user');
+          authProvider.addScope('user:email');
+          break;
+        default:
+          return { success: false, error: 'Invalid OAuth provider' };
+      }
+
+      let userCredential: UserCredential;
+      
+      if (useRedirect) {
+        // Use redirect flow (better for mobile)
+        await signInWithRedirect(auth, authProvider);
+        // The result will be handled in handleRedirectResult
+        return { success: true };
+      } else {
+        // Use popup flow (desktop)
+        userCredential = await signInWithPopup(auth, authProvider);
+      }
+
+      const firebaseUser = userCredential.user;
+      
+      // Check if this is a new user
+      const userProfile = await this.getUserProfile(firebaseUser.uid);
+      
+      if (!userProfile) {
+        // First time OAuth sign in - create user profile
+        const userData: CreateUserData = {
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || 'User',
+          businessName: undefined,
+          phone: firebaseUser.phoneNumber || undefined,
+          preferences: {
+            defaultCurrency: 'PHP',
+            dateFormat: 'MM/dd/yyyy',
+            timeZone: 'Asia/Manila',
+            theme: 'dark',
+            notifications: {
+              email: true,
+              push: true,
+              weekly: true,
+              invoiceReminders: true,
+              goalUpdates: true,
+              anomalyAlerts: true
+            },
+            language: 'en'
+          }
+        };
+        
+        await this.createUserProfile(firebaseUser.uid, userData);
+      } else {
+        // Existing user - update last login
+        await this.updateLastLogin(firebaseUser.uid);
+      }
+
+      return {
+        success: true,
+        user: this.mapFirebaseUser(firebaseUser)
+      };
+
+    } catch (error) {
+      const authError = error as AuthError;
+      
+      // Handle specific OAuth errors
+      if (authError.code === 'auth/popup-closed-by-user') {
+        return { success: false, error: 'Sign in cancelled' };
+      }
+      
+      if (authError.code === 'auth/popup-blocked') {
+        return { success: false, error: 'Popup blocked. Please allow popups for this site.' };
+      }
+      
+      if (authError.code === 'auth/account-exists-with-different-credential') {
+        return { 
+          success: false, 
+          error: 'An account already exists with the same email address but different sign-in credentials.' 
+        };
+      }
+      
+      return {
+        success: false,
+        error: this.handleAuthError(authError)
+      };
+    }
+  }
+
+  /**
+   * Handle OAuth redirect result
+   * Call this on app initialization to handle redirect flow
+   */
+  async handleRedirectResult(): Promise<AuthResult> {
+    try {
+      const result = await getRedirectResult(auth);
+      
+      if (!result) {
+        // No redirect result pending
+        return { success: true };
+      }
+      
+      const firebaseUser = result.user;
+      
+      // Check if this is a new user
+      const userProfile = await this.getUserProfile(firebaseUser.uid);
+      
+      if (!userProfile) {
+        // First time OAuth sign in - create user profile
+        const userData: CreateUserData = {
+          email: firebaseUser.email || '',
+          name: firebaseUser.displayName || 'User',
+          businessName: undefined,
+          phone: firebaseUser.phoneNumber || undefined,
+          preferences: {
+            defaultCurrency: 'PHP',
+            dateFormat: 'MM/dd/yyyy',
+            timeZone: 'Asia/Manila',
+            theme: 'dark',
+            notifications: {
+              email: true,
+              push: true,
+              weekly: true,
+              invoiceReminders: true,
+              goalUpdates: true,
+              anomalyAlerts: true
+            },
+            language: 'en'
+          }
+        };
+        
+        await this.createUserProfile(firebaseUser.uid, userData);
+      } else {
+        // Existing user - update last login
+        await this.updateLastLogin(firebaseUser.uid);
+      }
+
+      return {
+        success: true,
+        user: this.mapFirebaseUser(firebaseUser)
+      };
 
     } catch (error) {
       return {

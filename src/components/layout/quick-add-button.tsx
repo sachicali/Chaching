@@ -45,29 +45,30 @@ export function QuickAddButton() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          variant="primary"
+          variant="default"
           size="icon"
-          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
+          className="fixed bottom-8 right-8 h-14 w-14 rounded-full shadow-lg z-50 transition-all duration-300 hover:scale-110 group"
           aria-label="Quick Add"
         >
-          <Plus className="h-7 w-7" />
+          <Plus className="h-6 w-6 group-hover:rotate-90 transition-transform duration-300" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Quick Add</DialogTitle>
           <DialogDescription>
-            Quickly add income, expense, or a note.
+            Quickly add income, expense, or a note to your records
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">
-              Type
+        
+        <div className="space-y-6 py-6">
+          <div className="space-y-3">
+            <Label htmlFor="type">
+              Transaction Type
             </Label>
             <Select value={itemType} onValueChange={(value) => setItemType(value as QuickAddItemType)}>
-              <SelectTrigger className="col-span-3" id="type">
-                <SelectValue placeholder="Select type" />
+              <SelectTrigger id="type">
+                <SelectValue placeholder="Select transaction type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Income">Income</SelectItem>
@@ -76,34 +77,48 @@ export function QuickAddButton() {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="amount" className="text-right">
-              Amount
+          
+          <div className="space-y-3">
+            <Label htmlFor="amount">
+              Amount (PHP)
             </Label>
             <Input 
               id="amount" 
               type="number" 
-              className="col-span-3" 
+              placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              disabled={itemType === "Note"} // Disable amount for "Note" type
+              disabled={itemType === "Note"}
             />
           </div>
-           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="description" className="text-right">
+          
+          <div className="space-y-3">
+            <Label htmlFor="description">
               Description
             </Label>
             <Input 
               id="description" 
-              className="col-span-3" 
+              placeholder="Enter description..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
         </div>
+        
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-          <Button type="submit" variant="primary" onClick={handleSubmit}>Save item</Button>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setIsOpen(false)}
+          >
+            Cancel
+          </Button>
+          <Button 
+            type="submit" 
+            onClick={handleSubmit}
+          >
+            Save Transaction
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

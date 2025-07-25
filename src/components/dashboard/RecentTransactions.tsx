@@ -53,7 +53,7 @@ export function RecentTransactions({
   };
 
   const getTransactionColor = (type: string) => {
-    return type === 'income' ? 'text-green-600' : 'text-destructive';
+    return type === 'income' ? 'text-success' : 'text-destructive';
   };
 
   if (loading) {
@@ -76,7 +76,7 @@ export function RecentTransactions({
           <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col justify-center items-center h-[300px] text-center text-muted-foreground p-6">
-          <ListChecks className="h-12 w-12 mb-4 text-primary" />
+          <ListChecks className="h-12 w-12 mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">No Transactions Yet</h3>
           <p className="mb-4 text-sm">Start by adding your first income or expense transaction.</p>
           <div className="flex gap-2">
@@ -98,7 +98,7 @@ export function RecentTransactions({
         <CardTitle className="text-xl font-semibold">Recent Transactions</CardTitle>
         {showViewAll && (
           <Link href="/income">
-            <Button variant="outline" size="sm">View All</Button>
+            <Button variant="ghost" size="sm">View All</Button>
           </Link>
         )}
       </CardHeader>
@@ -117,13 +117,13 @@ export function RecentTransactions({
               const TransactionIcon = getTransactionIcon(transaction.type);
               
               return (
-                <TableRow key={transaction.id} className="hover:bg-muted/50">
+                <TableRow key={transaction.id} className="hover:bg-muted/50 transition-colors duration-150 cursor-pointer">
                   <TableCell>
                     <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center",
+                      "w-8 h-8 rounded-lg flex items-center justify-center",
                       transaction.type === 'income' 
-                        ? 'bg-green-100 text-green-600 dark:bg-green-900/20' 
-                        : 'bg-red-100 text-red-600 dark:bg-red-900/20'
+                        ? 'bg-success/10 text-success' 
+                        : 'bg-destructive/10 text-destructive'
                     )}>
                       <TransactionIcon className="h-4 w-4" />
                     </div>

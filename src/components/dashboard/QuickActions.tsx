@@ -9,17 +9,17 @@ import {
   Users, 
   FileText, 
   Target,
-  BarChart3
+  BarChart3,
+  Zap
 } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 interface QuickAction {
   title: string;
   description: string;
   href: string;
   icon: React.ElementType;
-  variant: "default" | "outline" | "secondary";
-  color: string;
 }
 
 interface QuickActionsProps {
@@ -31,86 +31,75 @@ const quickActions: QuickAction[] = [
     title: "Add Income",
     description: "Record a new payment or income",
     href: "/income",
-    icon: TrendingUp,
-    variant: "default",
-    color: "text-green-600"
+    icon: TrendingUp
   },
   {
     title: "Add Expense", 
     description: "Log a business expense",
     href: "/expenses",
-    icon: TrendingDown,
-    variant: "outline",
-    color: "text-red-600"
+    icon: TrendingDown
   },
   {
     title: "Manage Clients",
     description: "View and manage your clients",
     href: "/clients",
-    icon: Users,
-    variant: "outline", 
-    color: "text-blue-600"
+    icon: Users
   },
   {
     title: "Create Invoice",
     description: "Generate a new invoice",
     href: "/invoices",
-    icon: FileText,
-    variant: "outline",
-    color: "text-purple-600"
+    icon: FileText
   },
   {
     title: "Set Goal",
     description: "Create a financial goal",
     href: "/goals",
-    icon: Target,
-    variant: "outline",
-    color: "text-orange-600"
+    icon: Target
   },
   {
     title: "View Reports",
     description: "Access financial reports",
     href: "/reports",
-    icon: BarChart3,
-    variant: "outline",
-    color: "text-indigo-600"
+    icon: BarChart3
   }
 ];
 
 export function QuickActions({ className }: QuickActionsProps) {
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {quickActions.map((action) => {
-            const IconComponent = action.icon;
-            
-            return (
-              <Link key={action.title} href={action.href}>
-                <Button 
-                  variant={action.variant} 
-                  className="w-full h-auto p-4 flex flex-col items-start space-y-2 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-center space-x-2 w-full">
-                    <div className={`p-2 rounded-md bg-background ${action.color}`}>
-                      <IconComponent className="h-4 w-4" />
-                    </div>
-                    <div className="text-left flex-1">
-                      <div className="font-semibold text-sm">{action.title}</div>
-                    </div>
+    <div className={cn("space-y-4", className)}>
+      {/* Simple Header */}
+      <h3 className="text-lg font-semibold text-foreground">
+        Quick Actions
+      </h3>
+
+      {/* Clean Action Cards */}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {quickActions.map((action) => {
+          const IconComponent = action.icon;
+          
+          return (
+            <Link key={action.title} href={action.href}>
+              <div className="group relative p-4 rounded-xl border border-border bg-gradient-to-b from-card to-card/95 hover:from-card/98 hover:to-card hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 flex items-center justify-center transition-all duration-200 group-hover:from-primary/10 group-hover:to-primary/15 shadow-sm group-hover:shadow-md">
+                    <IconComponent className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors duration-200" />
                   </div>
-                  <p className="text-xs text-muted-foreground text-left w-full">
-                    {action.description}
-                  </p>
-                </Button>
-              </Link>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-foreground text-sm group-hover:text-primary transition-colors duration-200">
+                      {action.title}
+                    </h4>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {action.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }

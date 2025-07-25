@@ -40,6 +40,8 @@ import { Switch } from '@/components/ui/switch';
 
 import { useTransactions } from '@/contexts/TransactionContext';
 import { useClients } from '@/contexts/ClientContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { SmartCategorySelector } from './SmartCategorySelector';
 import type { 
   TransactionType, 
   CurrencyCode, 
@@ -64,13 +66,13 @@ const transactionFormSchema = z.object({
   status: z.enum(['pending', 'completed', 'cancelled'] as const).default('completed'),
   clientId: z.string().optional(),
   paymentMethod: z.enum([
-    'bank_transfer',
-    'credit_card', 
-    'paypal',
-    'gcash',
-    'cash',
-    'crypto',
-    'other'
+    'Bank Transfer',
+    'Credit Card', 
+    'PayPal',
+    'GCash',
+    'Cash',
+    'Wise',
+    'Other'
   ] as const).optional(),
   receiptUrl: z.string().url().optional().or(z.literal('')),
   // Metadata fields
@@ -123,13 +125,13 @@ const EXPENSE_CATEGORIES = [
 ];
 
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  bank_transfer: 'Bank Transfer',
-  credit_card: 'Credit Card',
-  paypal: 'PayPal',
-  gcash: 'GCash',
-  cash: 'Cash',
-  crypto: 'Cryptocurrency',
-  other: 'Other'
+  'Bank Transfer': 'Bank Transfer',
+  'Credit Card': 'Credit Card',
+  'PayPal': 'PayPal',
+  'GCash': 'GCash',
+  'Cash': 'Cash',
+  'Wise': 'Wise',
+  'Other': 'Other'
 };
 
 // ============================================================================
@@ -147,6 +149,7 @@ export default function TransactionForm({
   const [selectedType, setSelectedType] = useState<TransactionType>(
     defaultValues?.type || type
   );
+  const { user } = useAuth();
 
   const { addTransaction } = useTransactions();
   const { clients } = useClients();
@@ -418,24 +421,17 @@ export default function TransactionForm({
                 control={form.control}
                 name="category"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
+                  <SmartCategorySelector
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    description={form.watch('description') || ''}
+                    amount={form.watch('amount') || 0}
+                    type={selectedType}
+                    vendor={selectedType === 'expense' ? form.watch('description') : undefined}
+                    userId={user?.uid || ''}
+                    categories={categories}
+                    placeholder="Select or AI-suggest category"
+                  />
                 )}
               />
             </div>

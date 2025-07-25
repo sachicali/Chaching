@@ -515,14 +515,17 @@ export class SchedulerService {
   /**
    * Get queue statistics
    */
-  async getQueueStats(): Promise<{
+  async getQueueStats(userId: string): Promise<{
     queued: number;
     processing: number;
     failed: number;
     byPriority: Record<EmailPriority, number>;
   }> {
     try {
-      const q = query(collection(db, this.COLLECTIONS.EMAIL_QUEUE));
+      const q = query(
+        collection(db, this.COLLECTIONS.EMAIL_QUEUE),
+        where('userId', '==', userId)
+      );
       const querySnapshot = await getDocs(q);
 
       const stats = {

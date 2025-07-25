@@ -341,8 +341,8 @@ export default function TransactionList({
           </div>
         </TableCell>
         <TableCell>
-          <Badge variant={getStatusBadgeVariant(transaction.status)}>
-            {transaction.status}
+          <Badge variant={getStatusBadgeVariant(transaction.status || 'pending')}>
+            {transaction.status || 'pending'}
           </Badge>
         </TableCell>
         <TableCell>
